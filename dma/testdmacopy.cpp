@@ -32,6 +32,18 @@
 #include "DmaRequest.h"
 #include "LoopbackControl.h"
 
+
+#ifdef SIMULATION
+int arraySize = 4*1024;
+#else
+int arraySize = 16*1024*1024;
+#endif
+int doWrite = 1;
+int doRead = 1;
+int numchannels = 1;
+int numiters = 1;
+int burstLenBytes = 64;
+
 class DmaIndication;
 DmaManager *dma;
 LoopbackControlProxy *loopbackControl;
@@ -124,13 +136,17 @@ public:
       //sem_init(&sem, 0, 0);
     }
 
-    void readDone ( uint32_t sglId, uint32_t base, const uint8_t tag ) {
-      fprintf(stderr, "[%s:%d] sglId=%d base=%08x tag=%d\n", __FUNCTION__, __LINE__, sglId, base, tag);
+    void readDone ( uint32_t sglId, uint32_t base, const uint8_t tag, uint32_t cycles ) {
+	cycles *= -1;
+	fprintf(stderr, "[%s:%d] sglId=%d base=%08x tag=%d cycles=%d arraySize=%d %5.2f\n",
+		__FUNCTION__, __LINE__, sglId, base, tag, cycles, arraySize, (double)arraySize/16/(double)cycles);
       //sem_post(&sem);
       incr_count();
     }
-    void writeDone ( uint32_t sglId, uint32_t base, uint8_t tag ) {
-      fprintf(stderr, "[%s:%d] sglId=%d base=%08x tag=%d\n", __FUNCTION__, __LINE__, sglId, base, tag);
+    void writeDone ( uint32_t sglId, uint32_t base, uint8_t tag, uint32_t cycles ) {
+	cycles *= -1;
+	fprintf(stderr, "[%s:%d] sglId=%d base=%08x tag=%d cycles=%d arraySize=%d %5.2f\n",
+		__FUNCTION__, __LINE__, sglId, base, tag, cycles, arraySize, (double)arraySize/16/(double)cycles);
       //sem_post(&sem);
       incr_count();
     }
@@ -139,21 +155,12 @@ public:
     }
 };
 
-#ifdef SIMULATION
-int arraySize = 4*1024;
-#else
-int arraySize = 16*1024*1024;
-#endif
-int doWrite = 1;
-int doRead = 1;
-int numchannels = 1;
-int numiters = 1;
-
 ChannelWorker::ChannelWorker(int channel)
     : poller(new PortalPoller(0)), channel(channel), size(arraySize), waitCount(0)
 {
     dmaRequest    = new DmaRequestProxy(proxyNames[channel], poller);
     dmaRequest->pint.busyType = BUSY_SPIN;
+    dmaRequest->burstLen(burstLenBytes);
     dmaIndication = new DmaIndication(wrapperNames[channel], poller, this);
     fprintf(stderr, "[%s:%d] channel %d dma mgr %p allocating buffers\n", __FUNCTION__, __LINE__, channel, dma);
     for (int i = 0; i < 4; i++) {
@@ -172,13 +179,13 @@ void ChannelWorker::run()
     portalTimerStart(0);
     for (int i = 0; i < numiters; i++) {
 	if (doRead) {
-	    fprintf(stderr, "[%s:%d] channel %d requesting first dma\n", __FUNCTION__, __LINE__, channel);
-	    dmaRequest->read(buffers[0]->reference(), 0, size/2, 0);
+	    fprintf(stderr, "[%s:%d] channel %d requesting first dma size=%d\n", __FUNCTION__, __LINE__, channel, size);
+	    dmaRequest->read(buffers[0]->reference(), 0, size, 0);
 	    waitCount++;
 	}
 
 	if (doWrite) {
-	    dmaRequest->write(buffers[1]->reference(), 0, size/2, 1);
+	    dmaRequest->write(buffers[1]->reference(), 0, size, 1);
 	    waitCount++;
 	}
     }
@@ -186,6 +193,7 @@ void ChannelWorker::run()
     // poll
     while (waitCount > 0) {
 	poller->event();
+	//sleep(1);
     }
     platformStatistics();
     sem_post(&workersem);
@@ -201,13 +209,16 @@ void *ChannelWorker::threadfn(void *c)
 int main(int argc, char * const*argv)
 {
     int opt;
-    while ((opt = getopt(argc, argv, "i:rws:")) != -1) {
+    while ((opt = getopt(argc, argv, "b:i:rws:")) != -1) {
 	switch (opt) {
 	case 'r':
 	    doWrite = 0;
 	    break;
 	case 'w':
 	    doRead = 0;
+	    break;
+	case 'b':
+	    burstLenBytes = strtoul(optarg, 0, 0);
 	    break;
 	case 'i':
 	    numiters = strtoul(optarg, 0, 0);

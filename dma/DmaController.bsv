@@ -55,9 +55,9 @@ endinterface
 
 interface DmaIndication;
    // Indicates completion of read request, identified by tag, from offset base of objId
-   method Action readDone(Bit#(32) objId, Bit#(32) base, Bit#(8) tag);
+   method Action readDone(Bit#(32) objId, Bit#(32) base, Bit#(8) tag, Bit#(32) cycles);
    // Indicates completion of write request, identified by tag, to offset base of objId
-   method Action writeDone(Bit#(32) objId, Bit#(32) base, Bit#(8) tag);
+   method Action writeDone(Bit#(32) objId, Bit#(32) base, Bit#(8) tag, Bit#(32) cycles);
 endinterface
 
 //
@@ -75,7 +75,7 @@ interface DmaController#(numeric type numChannels);
    interface Vector#(1,MemWriteClient#(DataBusWidth))     writeClient;
 endinterface
 
-typedef 14 NumOutstandingRequests;
+typedef 15 NumOutstandingRequests;
 typedef TMul#(NumOutstandingRequests,TMul#(32,4)) BufferSizeBytes;
 
 function Bit#(dsz) memdatafToData(MemDataF#(dsz) mdf); return mdf.data; endfunction
@@ -89,11 +89,15 @@ module mkDmaController#(Vector#(numChannels,DmaIndication) indication)(DmaContro
    MemReadEngine#(DataBusWidth,DataBusWidth,NumOutstandingRequests,numChannels)  re <- mkMemReadEngineBuff(valueOf(BufferSizeBytes));
    MemWriteEngine#(DataBusWidth,DataBusWidth,NumOutstandingRequests,numChannels) we <- mkMemWriteEngineBuff(valueOf(BufferSizeBytes));
 
-   Vector#(numChannels, FIFO#(Tuple2#(Bit#(32),Bit#(32)))) readReqs <- replicateM(mkSizedFIFO(valueOf(NumOutstandingRequests)));
-   Vector#(numChannels, FIFO#(Tuple2#(Bit#(32),Bit#(32)))) writeReqs <- replicateM(mkSizedFIFO(valueOf(NumOutstandingRequests)));
+   Vector#(numChannels, FIFO#(Tuple3#(Bit#(32),Bit#(32),Bit#(32)))) readReqs <- replicateM(mkSizedFIFO(valueOf(NumOutstandingRequests)));
+   Vector#(numChannels, FIFO#(Tuple3#(Bit#(32),Bit#(32),Bit#(32)))) writeReqs <- replicateM(mkSizedFIFO(valueOf(NumOutstandingRequests)));
    Vector#(numChannels, FIFOF#(MemDataF#(DataBusWidth))) readFifo <- replicateM(mkFIFOF());
    Vector#(numChannels, FIFO#(Bit#(8))) writeTags <- replicateM(mkSizedFIFO(valueOf(NumOutstandingRequests)));
    Reg#(Bit#(BurstLenSize)) burstLenReg <- mkReg(64);
+   Reg#(Bit#(32)) cyclesReg <- mkReg(0);
+   rule countCycles;
+      cyclesReg <= cyclesReg + 1;
+   endrule
 
    for (Integer channel = 0; channel < valueOf(numChannels); channel = channel + 1) begin
        FIFO#(Bit#(8)) readTags <- mkSizedFIFO(valueOf(NumOutstandingRequests));
@@ -105,15 +109,15 @@ module mkDmaController#(Vector#(numChannels,DmaIndication) indication)(DmaContro
 	  readFifo[channel].enq(mdf);
        endrule
        rule readDoneRule;
-	  match { .objId, .base } <- toGet(readReqs[channel]).get();
+	  match { .objId, .base, .cycles } <- toGet(readReqs[channel]).get();
 	  let tag <- toGet(readTags).get();
-	  indication[channel].readDone(objId, base, tag);
+	  indication[channel].readDone(objId, base, tag, cycles-cyclesReg);
        endrule
        rule writeDoneRule;
-	  match { .objId, .base } <- toGet(writeReqs[channel]).get();
+	  match { .objId, .base, .cycles } <- toGet(writeReqs[channel]).get();
 	  let done <- we.writeServers[channel].done.get();
 	  let tag <- toGet(writeTags[channel]).get();
-	  indication[channel].writeDone(objId, base, tag);
+	  indication[channel].writeDone(objId, base, tag, cycles-cyclesReg);
        endrule
    end
 
@@ -123,7 +127,7 @@ module mkDmaController#(Vector#(numChannels,DmaIndication) indication)(DmaContro
 	      burstLenReg <= burstLenBytes;
 	 endmethod
 	 method Action read(Bit#(32) objId, Bit#(32) base, Bit#(32) bytes, Bit#(8) tag);
-	      readReqs[channel].enq(tuple2(objId, base));
+	      readReqs[channel].enq(tuple3(objId, base, cyclesReg));
 	      re.readServers[channel].request.put(MemengineCmd {sglId: truncate(objId),
 								base: extend(base),
 								burstLen: extend(burstLenReg),
@@ -132,7 +136,7 @@ module mkDmaController#(Vector#(numChannels,DmaIndication) indication)(DmaContro
 								});
 	 endmethod
 	 method Action write(Bit#(32) objId, Bit#(32) base, Bit#(32) bytes, Bit#(8) tag);
-	      writeReqs[channel].enq(tuple2(objId, base));
+	      writeReqs[channel].enq(tuple3(objId, base, cyclesReg));
 	      we.writeServers[channel].request.put(MemengineCmd {sglId: truncate(objId),
 								 base: extend(base),
 								 burstLen: extend(burstLenReg),

@@ -30,6 +30,7 @@ import MemTypes::*;
 import HostInterface::*;
 import DmaController::*;
 import Pipe::*;
+import ConnectalBramFifo::*;
 
 import Interfaces::*;
 
@@ -44,11 +45,13 @@ endinterface
 typedef 2 NumChannels;
 
 module mkDmaLoopback#(DmaIndication indication0, DmaIndication indication1)(DmaLoopback);
+   let clock <- exposeCurrentClock;
+   let reset <- exposeCurrentReset;
    DmaController#(NumChannels) dma <- mkDmaController(vec(indication0,indication1));
    Reg#(Bool) loopbackReg <- mkReg(False);
    
    for (Integer channel = 0; channel < valueOf(NumChannels); channel = channel + 1) begin
-      FIFOF#(MemDataF#(DataBusWidth)) buffer <- mkSizedBRAMFIFOF(1024);
+      FIFOF#(MemDataF#(DataBusWidth)) buffer <- mkDualClockBramFIFOF(clock, reset, clock, reset);
       rule readDataRule;
 	 let md <- toGet(dma.readData[channel]).get();
 	 if (loopbackReg)

@@ -16,9 +16,9 @@
 ## To run on vc707:
 ##     ./vc707g2/bin/ubuntu.exe
 ##
-CONNECTALDIR?=../..
+CONNECTALDIR?=/usr/share/connectal
 DMADIR=../dma/
 
 include $(DMADIR)/Makefile
 
-CONNECTALFLAGS += -D DataBusWidth=128
+CONNECTALFLAGS += -D DataBusWidth=128 --nocache

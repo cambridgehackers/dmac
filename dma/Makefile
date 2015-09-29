@@ -18,7 +18,7 @@
 ##
 
 ## default location of connectal
-CONNECTALDIR?=../..
+CONNECTALDIR?=/usr/share/connectal
 
 ## refer to the files in this directory via $(DMADIR)/ because this Makefile is included in ../dma128/Makefile
 DMADIR=../dma/
