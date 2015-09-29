@@ -36,7 +36,7 @@
 #ifdef SIMULATION
 int arraySize = 4*1024;
 #else
-int arraySize = 16*1024*1024;
+int arraySize = 128*1024;
 #endif
 int doWrite = 1;
 int doRead = 1;
@@ -226,6 +226,8 @@ int main(int argc, char * const*argv)
 	    break;
 	case 'b':
 	    burstLenBytes = strtoul(optarg, 0, 0);
+	    if (burstLenBytes > 128)
+	      burstLenBytes = 128;
 	    break;
 	case 'i':
 	    numiters = strtoul(optarg, 0, 0);
