@@ -42,7 +42,7 @@ int doWrite = 1;
 int doRead = 1;
 int numchannels = 1;
 int numiters = 1;
-int burstLenBytes = 64;
+int burstLenBytes = 128;
 
 class DmaIndication;
 DmaManager *dma;
@@ -109,7 +109,6 @@ public:
     ChannelWorker(int channel);
     void run();
     void post() {
-      fprintf(stderr, "post channel=%d\n", channel);
       waitCount--;
       loopbackControl->marker(0xf00f);
     }
@@ -123,7 +122,6 @@ class DmaIndication : public DmaIndicationWrapper
   int count;
   void incr_count() {
     count--;
-    fprintf(stderr, "DmaIndication::incr_count() channel=%p\n", channel);
     if (channel)
       channel->post();
     if (count <= 0) {
@@ -136,17 +134,27 @@ public:
       //sem_init(&sem, 0, 0);
     }
 
+    double linkUtilization(uint32_t cycles, int inclHeaders = 0) {
+	double dataBeats = (double)arraySize/16;
+	int headerBeats = 0;
+	if (inclHeaders) {
+	    headerBeats = arraySize / burstLenBytes;
+	}
+	double totalBeats = dataBeats + headerBeats;
+	return totalBeats / (double)cycles;
+    }
+
     void readDone ( uint32_t sglId, uint32_t base, const uint8_t tag, uint32_t cycles ) {
 	cycles *= -1;
-	fprintf(stderr, "[%s:%d] sglId=%d base=%08x tag=%d cycles=%d arraySize=%d %5.2f\n",
-		__FUNCTION__, __LINE__, sglId, base, tag, cycles, arraySize, (double)arraySize/16/(double)cycles);
+	fprintf(stderr, "[%s:%d] sglId=%d base=%08x tag=%d cycles=%d read bandwidth %5.2f MB/s link utilization %5.2f%%\n",
+		__FUNCTION__, __LINE__, sglId, base, tag, cycles, 16*250*linkUtilization(cycles), 100.0*linkUtilization(cycles, 1));
       //sem_post(&sem);
       incr_count();
     }
     void writeDone ( uint32_t sglId, uint32_t base, uint8_t tag, uint32_t cycles ) {
 	cycles *= -1;
-	fprintf(stderr, "[%s:%d] sglId=%d base=%08x tag=%d cycles=%d arraySize=%d %5.2f\n",
-		__FUNCTION__, __LINE__, sglId, base, tag, cycles, arraySize, (double)arraySize/16/(double)cycles);
+	fprintf(stderr, "[%s:%d] sglId=%d base=%08x tag=%d cycles=%d write bandwidth %5.2f MB/s link utilization %5.2f%%\n",
+		__FUNCTION__, __LINE__, sglId, base, tag, cycles, 16*250*linkUtilization(cycles), 100.0*linkUtilization(cycles, 1));
       //sem_post(&sem);
       incr_count();
     }
@@ -195,7 +203,6 @@ void ChannelWorker::run()
 	poller->event();
 	//sleep(1);
     }
-    platformStatistics();
     sem_post(&workersem);
 }
 
@@ -259,13 +266,11 @@ int main(int argc, char * const*argv)
       ChannelWorker *channel = new ChannelWorker(i);
       pthread_create(&threads[i], 0, channel->threadfn, channel);
     }
-    //portalTimerStart(0);
     started = 1;
     // wait for threads to exit
     for (int i = 0; i < numchannels; i++) {
       sem_wait(&workersem);
     }
-    //platformStatistics();
 
     // wait for threads to exit
     for (int i = 0; i < numchannels; i++) {
