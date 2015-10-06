@@ -28,7 +28,7 @@ H2S_INTERFACES = DmaLoopback:DmaIndication,DmaIndication
 MEM_READ_INTERFACES = lDmaLoopback.readClient
 MEM_WRITE_INTERFACES = lDmaLoopback.writeClient
 BSVFILES = $(DMADIR)/DmaController.bsv $(DMADIR)/Interfaces.bsv
-CPPFILES= $(DMADIR)/testdmacopy.cpp
+CPPFILES= $(DMADIR)/testdmacopy.cpp $(DMADIR)/dmac.cpp
 
 include $(CONNECTALDIR)/Makefile.connectal
 
