@@ -32,4 +32,6 @@ CPPFILES= $(DMADIR)/testdmacopy.cpp
 
 include $(CONNECTALDIR)/Makefile.connectal
 
+BURST_LEN_SIZE=10
+
 CONNECTALFLAGS += -D USE_DUAL_CLOCK_FIFOF

@@ -36,7 +36,7 @@ interface DmaRequest;
    //
    // Configures burstLen used by DMA transfers. Only needed for performance tuning if default value does not perform well.
    //
-   method Action burstLen(Bit#(8) burstLenBytes);
+   method Action burstLen(Bit#(16) burstLenBytes);
    //
    // Requests a read of system memory, streaming the data to the readData PipeOut
    // @param objId the reference to the memory object allocated by portalAlloc
@@ -123,8 +123,8 @@ module mkDmaController#(Vector#(numChannels,DmaIndication) indication)(DmaContro
 
    function DmaRequest dmaRequestInterface(Integer channel);
       return (interface DmaRequest;
-	 method Action burstLen(Bit#(8) burstLenBytes);
-	      burstLenReg <= burstLenBytes;
+	 method Action burstLen(Bit#(16) burstLenBytes);
+	      burstLenReg <= truncate(burstLenBytes);
 	 endmethod
 	 method Action read(Bit#(32) objId, Bit#(32) base, Bit#(32) bytes, Bit#(8) tag);
 	      readReqs[channel].enq(tuple3(objId, base, cyclesReg));
