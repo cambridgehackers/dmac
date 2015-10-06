@@ -27,6 +27,8 @@
 #include <pthread.h>
 #include <semaphore.h>
 
+#include "dmac.h"
+// the next 3 should be hidden in dmac.cpp
 #include "dmaManager.h"
 #include "DmaIndication.h"
 #include "DmaRequest.h"
@@ -36,7 +38,7 @@
 #ifdef SIMULATION
 int arraySize = 4*1024;
 #else
-int arraySize = 128*1024;
+int arraySize = 16*1024;
 #endif
 int doWrite = 1;
 int doRead = 1;
@@ -45,7 +47,6 @@ int numiters = 1;
 int burstLenBytes = 128;
 
 class DmaIndication;
-DmaManager *dma;
 LoopbackControlProxy *loopbackControl;
 static int proxyNames[] = { IfcNames_DmaRequestS2H0 
 			    , IfcNames_DmaRequestS2H1 
@@ -55,46 +56,6 @@ static int wrapperNames[] = { IfcNames_DmaIndicationH2S0
 };
 
 pthread_t threads[2];
-
-class DmaBuffer {
-    DmaManager *mgr;
-    const int size;
-    int fd;
-    char *buf;
-    int ref;
-public:
-    // Allocates a portal memory object of specified size and maps it into user process
-    DmaBuffer(DmaManager *mgr, int size) : mgr(mgr), size(size), ref(-1) {
-	fd = portalAlloc(size, 1);
-	buf = (char *)portalMmap(fd, size);
-    }
-    // Dereferences and deallocates the portal memory object
-    // if destructor is not called, the object is automatically
-    // unreferenced and freed when the process exits
-    ~DmaBuffer() {
-	mgr->dereference(fd);
-	portalMunmap(buf, size);
-	close(fd);
-    }
-    // returns the address of the mapped buffer
-    char *buffer() {
-	return buf;
-    }
-    // returns the reference to the object
-    //
-    // Sends the address translation table to hardware MMU if necessary.
-    int reference() {
-	if (ref == -1)
-	    ref = mgr->reference(fd);
-	return ref;
-    }
-    // Removes the address translation table from the hardware MMU
-    void dereference() {
-	if (ref != -1)
-	    mgr->dereference(ref);
-	ref = -1;
-    }
-};
 
 // ChannelWorker processes one channel
 class ChannelWorker {
@@ -170,9 +131,9 @@ ChannelWorker::ChannelWorker(int channel)
     dmaRequest->pint.busyType = BUSY_SPIN;
     dmaRequest->burstLen(burstLenBytes);
     dmaIndication = new DmaIndication(wrapperNames[channel], poller, this);
-    fprintf(stderr, "[%s:%d] channel %d dma mgr %p allocating buffers\n", __FUNCTION__, __LINE__, channel, dma);
+    fprintf(stderr, "[%s:%d] channel %d allocating buffers\n", __FUNCTION__, __LINE__, channel);
     for (int i = 0; i < 4; i++) {
-	buffers[i] = new DmaBuffer(dma, size);
+	buffers[i] = new DmaBuffer(size);
     }
   }
 
@@ -259,9 +220,6 @@ int main(int argc, char * const*argv)
     }
     loopbackControl = new LoopbackControlProxy(IfcNames_LoopbackControlS2H);
     loopbackControl->loopback(0);
-    fprintf(stderr, "[%s:%d] calling platformInit\n", __FUNCTION__, __LINE__);
-    dma = platformInit();
-    fprintf(stderr, "[%s:%d] creating proxy and wrapper\n", __FUNCTION__, __LINE__);
 
     sem_init(&workersem, 0, 0);
     for (int i = 0; i < numchannels; i++) {
