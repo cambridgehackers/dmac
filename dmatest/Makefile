@@ -1,10 +1,11 @@
 
 DMADIR=../dma
+CONNECTALDIR=$(realpath ../../connectal)
 
-all: testdma-bluesim testdma-vc707
+all: testdma-bluesim testdma-vc707g2
 
 testdma-%:
-	$(MAKE) BOARD=$(*) testdma-$(*)
+	$(MAKE) CONNECTALDIR=$(CONNECTALDIR) BOARD=$(*) testdma-$(*)
 
 connectal/portal.h:
 	mkdir -p connectal
@@ -17,7 +18,11 @@ ifeq ($(BOARD),bluesim)
 endif
 
 ../dmaso/$(BOARD)/bin/connectal.so:
-	cd ../dmaso; pwd; make gen.$(BOARD); make -C $(BOARD) connectal.so bsim
+ifeq ($(BOARD),bluesim)
+	cd ../dmaso; pwd; make CONNECTALDIR=$(CONNECTALDIR) gen.$(BOARD); make -C $(BOARD) connectal.so bsim
+else
+	cd ../dmaso; pwd; make CONNECTALDIR=$(CONNECTALDIR) gen.$(BOARD) build.$(BOARD)
+endif
 
 
 testdmacopy.o: $(DMADIR)/testdmacopy.cpp
