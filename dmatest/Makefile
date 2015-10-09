@@ -7,9 +7,6 @@ all: testdma-bluesim testdma-vc707g2
 testdma-%:
 	$(MAKE) CONNECTALDIR=$(CONNECTALDIR) BOARD=$(*) testdma-$(*)
 
-connectal/portal.h:
-	mkdir -p connectal
-
 libdmac-$(BOARD).so: ../dmaso/$(BOARD)/bin/connectal.so
 	cp ../dmaso/$(BOARD)/bin/connectal.so libdmac-$(BOARD).so
 ifeq ($(BOARD),bluesim)
@@ -23,7 +20,6 @@ ifeq ($(BOARD),bluesim)
 else
 	cd ../dmaso; pwd; make CONNECTALDIR=$(CONNECTALDIR) gen.$(BOARD) build.$(BOARD)
 endif
-
 
 testdmacopy.o: $(DMADIR)/testdmacopy.cpp
 	g++ -O -c $(DMADIR)/testdmacopy.cpp
