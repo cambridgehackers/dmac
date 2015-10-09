@@ -29,11 +29,14 @@ public:
     void dereference();
 };
 
+// Implement DmaCallback to receive notifications that DMA read and write requests are done
 class DmaCallback {
 public:
     DmaCallback() {}
     virtual ~DmaCallback() {}
+    //  DmaChannel calls readDone from DmaChannel::checkIndications when it is notified that a DMA read request has completed
     virtual void readDone ( uint32_t sglId, uint32_t base, const uint8_t tag, uint32_t cycles ) = 0;
+    //  DmaChannel calls writeDone from DmaChannel::checkIndications when it is notified that a DMA write request has completed
     virtual void writeDone ( uint32_t sglId, uint32_t base, uint8_t tag, uint32_t cycles ) = 0;
 };
 
@@ -41,7 +44,8 @@ class DmaIndication;
 class DmaRequestProxy;
 class PortalPoller;
 
-// DmaChannel processes one channel
+// DmaChannel provides thread safe access to DMA channel number channelnum and
+// it notifies the client of completion of requests via the callbacks object
 class DmaChannel {
   pthread_mutex_t channel_lock;
   PortalPoller *poller;
@@ -53,9 +57,11 @@ class DmaChannel {
   friend class DmaController;
   static void *threadfn(void *c);
 public:
-    DmaChannel(int channel, DmaCallback *callbacks = 0);
-    void run();
+    DmaChannel(int channelnum, DmaCallback *callbacks = 0);
+    // check for notification of completion of DMA requests
     void checkIndications();
+    // issue a DMA read request
     int read ( const uint32_t objId, const uint32_t base, const uint32_t bytes, const uint8_t tag );
+    // issue a DMA writerequest
     int write ( const uint32_t objId, const uint32_t base, const uint32_t bytes, const uint8_t tag );
 };
