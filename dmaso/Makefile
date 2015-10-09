@@ -30,7 +30,7 @@ MEM_WRITE_INTERFACES = lDmaLoopback.writeClient
 BSVFILES = $(DMADIR)/DmaController.bsv $(DMADIR)/Interfaces.bsv
 CPPFILES= $(DMADIR)/dmac.cpp
 
-CONNECTAL_SHARED=1
+CONNECTALFLAGS += --shared
 
 include $(CONNECTALDIR)/Makefile.connectal
 
