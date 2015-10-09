@@ -1,5 +1,7 @@
 
-
+#include <pthread.h>
+#include <semaphore.h>
+#include <GeneratedTypes.h>
 
 class DmaManager;
 
@@ -25,4 +27,41 @@ public:
     int reference();
     // Removes the address translation table from the hardware MMU
     void dereference();
+};
+
+class DmaIndication;
+
+// DmaChannel processes one channel
+class DmaIndication;
+class DmaRequestProxy;
+class PortalPoller;
+class DmaChannel {
+  pthread_mutex_t channel_lock;
+  PortalPoller *poller;
+  DmaIndication *dmaIndication;
+  DmaRequestProxy *dmaRequest;
+  int channel;
+  DmaBuffer *buffers[4];
+  int size;
+  volatile int waitCount;
+  friend class DmaIndication;
+  friend class DmaController;
+  void post();
+  static void *threadfn(void *c);
+public:
+    DmaChannel(int channel);
+    void run();
+    void checkIndications();
+    int read ( const uint32_t objId, const uint32_t base, const uint32_t bytes, const uint8_t tag );
+    int write ( const uint32_t objId, const uint32_t base, const uint32_t bytes, const uint8_t tag );
+};
+
+class DmaController {
+ private:
+  pthread_t *threads;
+ public:
+  DmaController();
+  ~DmaController();
+  void start();
+  void wait();
 };
