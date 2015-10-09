@@ -38,7 +38,7 @@
 #ifdef SIMULATION
 int arraySize = 4*1024;
 #else
-int arraySize = 16*1024;
+int arraySize = 128*1024;
 #endif
 int doWrite = 1;
 int doRead = 1;
