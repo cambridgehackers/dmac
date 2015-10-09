@@ -29,39 +29,33 @@ public:
     void dereference();
 };
 
-class DmaIndication;
+class DmaCallback {
+public:
+    DmaCallback() {}
+    virtual ~DmaCallback() {}
+    virtual void readDone ( uint32_t sglId, uint32_t base, const uint8_t tag, uint32_t cycles ) = 0;
+    virtual void writeDone ( uint32_t sglId, uint32_t base, uint8_t tag, uint32_t cycles ) = 0;
+};
 
-// DmaChannel processes one channel
 class DmaIndication;
 class DmaRequestProxy;
 class PortalPoller;
+
+// DmaChannel processes one channel
 class DmaChannel {
   pthread_mutex_t channel_lock;
   PortalPoller *poller;
   DmaIndication *dmaIndication;
   DmaRequestProxy *dmaRequest;
   int channel;
-  DmaBuffer *buffers[4];
-  int size;
   volatile int waitCount;
   friend class DmaIndication;
   friend class DmaController;
-  void post();
   static void *threadfn(void *c);
 public:
-    DmaChannel(int channel);
+    DmaChannel(int channel, DmaCallback *callbacks = 0);
     void run();
     void checkIndications();
     int read ( const uint32_t objId, const uint32_t base, const uint32_t bytes, const uint8_t tag );
     int write ( const uint32_t objId, const uint32_t base, const uint32_t bytes, const uint8_t tag );
-};
-
-class DmaController {
- private:
-  pthread_t *threads;
- public:
-  DmaController();
-  ~DmaController();
-  void start();
-  void wait();
 };

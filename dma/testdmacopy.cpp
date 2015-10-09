@@ -40,6 +40,110 @@ int numchannels = 1;
 int numiters = 1;
 int burstLenBytes = 128;
 
+class ChannelWorker : public DmaCallback {
+    DmaChannel *channel;
+    int channelNumber;
+    int waitCount;
+    DmaBuffer *buffers[4];
+    static void *threadfn(void *c);
+    void run();
+
+    static int started;
+    static pthread_t *threads;
+
+public:
+    ChannelWorker(int channelNumber)
+    : channelNumber(channelNumber), waitCount(0) {
+
+	channel = new DmaChannel(channelNumber, this);
+
+	fprintf(stderr, "[%s:%d] channel %d allocating buffers\n", __FUNCTION__, __LINE__, channelNumber);
+	for (int i = 0; i < 4; i++) {
+	    buffers[i] = new DmaBuffer(arraySize);
+	}
+    }
+
+    double linkUtilization(uint32_t cycles, int inclHeaders = 0) {
+	double dataBeats = (double)arraySize/16;
+	int headerBeats = 0;
+	if (inclHeaders) {
+	    headerBeats = arraySize / burstLenBytes;
+	}
+	double totalBeats = dataBeats + headerBeats;
+	return totalBeats / (double)cycles;
+    }
+    void readDone ( uint32_t sglId, uint32_t base, const uint8_t tag, uint32_t cycles ) {
+	cycles *= -1;
+	fprintf(stderr, "[%s:%d] sglId=%d base=%08x tag=%d cycles=%d read bandwidth %5.2f MB/s link utilization %5.2f%%\n",
+		__FUNCTION__, __LINE__, sglId, base, tag, cycles, 16*250*linkUtilization(cycles), 100.0*linkUtilization(cycles, 1));
+	waitCount--;
+    }
+    void writeDone ( uint32_t sglId, uint32_t base, uint8_t tag, uint32_t cycles ) {
+	cycles *= -1;
+	fprintf(stderr, "[%s:%d] sglId=%d base=%08x tag=%d cycles=%d write bandwidth %5.2f MB/s link utilization %5.2f%%\n",
+		__FUNCTION__, __LINE__, sglId, base, tag, cycles, 16*250*linkUtilization(cycles), 100.0*linkUtilization(cycles, 1));
+	waitCount--;
+    }
+    static void runTest();
+};
+
+void *ChannelWorker::threadfn(void *c)
+{
+    ChannelWorker *worker = (ChannelWorker *)c;
+    while (!started) {
+	// wait for other threads to be ready
+    }
+    worker->run();
+    return 0;
+}
+
+void ChannelWorker::run()
+{
+    portalTimerStart(0);
+    for (int i = 0; i < numiters; i++) {
+	if (doRead) {
+	    fprintf(stderr, "[%s:%d] channel %d requesting dma read size=%d\n", __FUNCTION__, __LINE__, channelNumber, arraySize);
+	    int tag = waitCount;
+	    channel->read(buffers[0]->reference(), 0, arraySize, tag);
+	    waitCount++;
+	}
+
+	if (doWrite) {
+	    fprintf(stderr, "[%s:%d] channel %d requesting dma write size=%d\n", __FUNCTION__, __LINE__, channelNumber, arraySize);
+	    int tag = waitCount;
+	    channel->write(buffers[1]->reference(), 0, arraySize, tag);
+	    waitCount++;
+	}
+    }
+    fprintf(stderr, "[%s:%d] channel %d waiting for responses\n", __FUNCTION__, __LINE__, channelNumber);
+    while (waitCount > 0) {
+      channel->checkIndications();
+    }
+}
+
+int ChannelWorker::started = 0;
+pthread_t *ChannelWorker::threads = 0;
+
+void ChannelWorker::runTest()
+{
+    started = 0;
+    threads = new pthread_t[numchannels];
+    for (int i = 0; i < numchannels; i++) {
+	ChannelWorker *worker = new ChannelWorker(i);
+	pthread_create(&threads[i], 0, worker->threadfn, worker);
+    }
+    started = 1;
+
+    // let test run
+
+    // wait for threads to exit
+    for (int i = 0; i < numchannels; i++) {
+      void *ret;
+      pthread_join(threads[i], &ret);
+      fprintf(stderr, "thread exited ret=%p\n", ret);
+    }
+}
+
 int main(int argc, char * const*argv)
 {
     int opt;
@@ -84,9 +188,6 @@ int main(int argc, char * const*argv)
 	    exit(EXIT_FAILURE);
 	}
     }
-    DmaController dmac;
-    dmac.start();
-    // do something here
-    dmac.wait();
+    ChannelWorker::runTest();
     return 0;
 }
