@@ -1,7 +1,7 @@
 
 #include <pthread.h>
 #include <semaphore.h>
-#include <GeneratedTypes.h>
+#include <stdint.h>
 
 class DmaManager;
 

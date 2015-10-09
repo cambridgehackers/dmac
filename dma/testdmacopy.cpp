@@ -99,7 +99,6 @@ void *ChannelWorker::threadfn(void *c)
 
 void ChannelWorker::run()
 {
-    portalTimerStart(0);
     for (int i = 0; i < numiters; i++) {
 	if (doRead) {
 	    fprintf(stderr, "[%s:%d] channel %d requesting dma read size=%d\n", __FUNCTION__, __LINE__, channelNumber, arraySize);

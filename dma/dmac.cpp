@@ -1,18 +1,11 @@
 
 #include "dmac.h"
 #include "portal.h"
+#include <GeneratedTypes.h>
 #include "dmaManager.h"
 #include "DmaIndication.h"
 #include "DmaRequest.h"
 #include "LoopbackControl.h"
-
-//fixme
-extern int doRead;
-extern int doWrite;
-extern int numiters;
-extern int numchannels;
-extern int arraySize;
-extern int burstLenBytes;
 
 static int proxyNames[] = { IfcNames_DmaRequestS2H0, IfcNames_DmaRequestS2H1 };
 static int wrapperNames[] = { IfcNames_DmaIndicationH2S0 , IfcNames_DmaIndicationH2S1 };
@@ -79,7 +72,7 @@ DmaChannel::DmaChannel(int channel, DmaCallback *callbacks)
     pthread_mutex_init(&channel_lock, 0);
     dmaRequest    = new DmaRequestProxy(proxyNames[channel], poller);
     dmaRequest->pint.busyType = BUSY_SPIN;
-    dmaRequest->burstLen(burstLenBytes);
+    //dmaRequest->burstLen(burstLenBytes);
     dmaIndication = new DmaIndication(wrapperNames[channel], poller, this, callbacks);
 }
 
