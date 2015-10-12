@@ -27,8 +27,8 @@ S2H_INTERFACES = DmaRequest:DmaLoopback.request0,request1 LoopbackControl:DmaLoo
 H2S_INTERFACES = DmaLoopback:DmaIndication,DmaIndication
 MEM_READ_INTERFACES = lDmaLoopback.readClient
 MEM_WRITE_INTERFACES = lDmaLoopback.writeClient
-BSVFILES = $(DMADIR)/DmaController.bsv $(DMADIR)/Interfaces.bsv
-CPPFILES= $(DMADIR)/testdmacopy.cpp ../src/dmac.cpp
+BSVFILES = ../src/DmaController.bsv $(DMADIR)/Interfaces.bsv
+CPPFILES= ../example/testdmacopy.cpp ../src/dmac.cpp
 
 include $(CONNECTALDIR)/Makefile.connectal
 
