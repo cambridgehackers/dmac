@@ -8,7 +8,7 @@ BSCWARNFLAGS += -demote-errors G0066:G0045 -suppress-warnings G0046:G0020:S0015:
 
 BSCFLAGS_COMMON += +RTS -K46777216 -RTS
 BSCOPTFLAGS= -show-schedule -aggressive-conditions
-BSCPATHFLAGS=  -bdir $(DTOP)/obj -vdir $(DTOP)/verilog -simdir $(DTOP)/obj -info-dir $(DTOP)/obj -p +:../src:../src/connectal/bsv:../src/generated
+BSCPATHFLAGS=  -bdir $(DTOP)/obj -vdir $(DTOP)/verilog -simdir $(DTOP)/obj -info-dir $(DTOP)/obj -p +:../src:../src/top:../src/connectal/bsv:../src/generated
 BSCFLAGS_COMMON += $(BSCWARNFLAGS) $(BSCOPTFLAGS) $(BSCPATHFLAGS) --wait-for-license
 BSCFLAGS_COMMON += -D ClockDefaultParam
 
