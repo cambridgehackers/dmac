@@ -11,7 +11,7 @@ BSCPATHFLAGS=  -bdir $(DTOP)/obj -vdir $(DTOP)/verilog -simdir $(DTOP)/obj -info
 BSCFLAGS_COMMON += $(BSCWARNFLAGS) $(BSCOPTFLAGS) $(BSCPATHFLAGS) --wait-for-license
 BSCFLAGS_COMMON += -D ClockDefaultParam
 
-all: testdma-$(BOARD)
+all: testdma-$(BOARD) mkExample.bit
 
 mkExample.bit: verilog/mkExample.v
 	rm -fr vc709
@@ -23,7 +23,7 @@ verilog/mkExample.v: Example.bsv
 	bsc $(BSVDEFINES) $(BSCFLAGS_COMMON) -u -verilog -g mkExample Example.bsv
 
 testdmacopy.o: ../dma/testdmacopy.cpp
-	g++ -O -c ../dma/testdmacopy.cpp
+	g++ -O -I../src -c ../dma/testdmacopy.cpp
 
 PORTAL_INFRA := portal.c transportHardware.c transportSocket.c portalJson.c portalPrintf.c poller.cpp sock_utils.c timer.c dmaManager.c platformMemory.cpp
 GENERATED_CPP=GeneratedCppCallbacks.cpp MemServerRequest.c MemServerRequestJson.c MMURequest.c MMURequestJson.c MemServerIndication.c MemServerIndicationJson.c MMUIndication.c MMUIndicationJson.c DmaRequest.c DmaRequestJson.c DmaIndication.c DmaIndicationJson.c
@@ -31,7 +31,7 @@ PORTAL_SRC_FILES := $(addprefix ../src/connectal/cpp/, $(PORTAL_INFRA)) \
                     $(addprefix ../src/generated/, $(GENERATED_CPP))
 SOURCES = ../src/dmac.cpp $(PORTAL_SRC_FILES)
 
-CFLAGS = -I../src/connectal/cpp -I../src/generated -I../src/connectal -D$(BOARD)
+CFLAGS = -I../src -I../src/connectal/cpp -I../src/generated -I../src/connectal -D$(BOARD)
 
 libdmac-$(BOARD).so:
 	$(Q)g++ -shared -fpic $(CFLAGS) -o libdmac-$(BOARD).so  $(SOURCES) $(LDLIBS)
