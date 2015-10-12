@@ -27,8 +27,7 @@ endinterface
 
 (* synthesize, no_default_clock, no_default_reset *)
 module mkPcieDma#(Clock pci_sys_clk_p, Clock pci_sys_clk_n, Reset pci_sys_reset_n)(PcieDma);
-   PcieTop#(DmaTopPins) pcieTop <- mkPcieTop(pci_sys_clk_p, pci_sys_clk_n,
-					     /* unused */ pci_sys_clk_p, /* unused */pci_sys_clk_n, pci_sys_reset_n);
+   PcieTop#(DmaTopPins) pcieTop <- mkPcieTop(pci_sys_clk_p, pci_sys_clk_n, pci_sys_reset_n);
 
    interface clock = pcieTop.pins.clock;
    interface reset = pcieTop.pins.reset;
