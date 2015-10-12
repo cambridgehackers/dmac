@@ -5,7 +5,6 @@
 #include "dmaManager.h"
 #include "DmaIndication.h"
 #include "DmaRequest.h"
-#include "LoopbackControl.h"
 
 static int proxyNames[] = { IfcNames_DmaRequestS2H0, IfcNames_DmaRequestS2H1 };
 static int wrapperNames[] = { IfcNames_DmaIndicationH2S0 , IfcNames_DmaIndicationH2S1 };
@@ -75,8 +74,6 @@ DmaChannel::DmaChannel(int channel, DmaCallback *callbacks)
     //dmaRequest->burstLen(burstLenBytes);
     dmaIndication = new DmaIndication(wrapperNames[channel], poller, this, callbacks);
 }
-
-LoopbackControlProxy *loopbackControl;
 
 void DmaChannel::checkIndications()
 {
