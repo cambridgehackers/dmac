@@ -21,3 +21,40 @@ Performance was measured on a PC with an Intel(R) Core(TM) i5-2320 CPU @ 3.00GHz
  * read bandwidth 2630.70 MB/s link utilization 74%
  * write bandwidth 3345.04 MB/s link utilization 94%
 
+System Requirements
+-------------------
+
+This version was tested on Ubuntu 14.04 using bluesim and VC707 using
+Bluespec 2015.05.beta1 and should also work with 2014.07.A. It was
+tested with Vivado 2015.2 and should also work with 2014.4.
+
+The DMA controller requires the Connectal device driver to enable
+software to connect to the DMA controller in the FPGA. There are
+prebuilt connectal packages for Ubuntu 12.04 and 14.04 that contain
+DKMS sources for the required device drivers.
+
+Installation Instructions
+-------------------------
+
+ * Install Bluespec 2014.07.A or newer
+ * Install Vivado 2014.4 or newer
+ * Install connectal::
+
+    sudo apt-add-repository ppa:jamey-hicks/connectal
+    sudo apt-get update
+    sudo apt-get install connectal
+
+
+
+Building the Example
+--------------------
+
+Build the example using make::
+
+    cd dmac; make
+
+Running the Example
+--------------------
+
+
+
