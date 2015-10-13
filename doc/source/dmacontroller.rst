@@ -56,5 +56,12 @@ Build the example using make::
 Running the Example
 --------------------
 
+To run the example::
+
+    cd dmac/example
+    fpajtag mkExample.bit
+    pciescanportal
+    LD_LIBRARY_PATH=. ./testdma-$(BOARD)
+
 
 
