@@ -60,7 +60,6 @@ To run the example::
 
     cd dmac/example
     fpajtag mkExample.bit
-    pciescanportal
     LD_LIBRARY_PATH=. ./testdma-$(BOARD)
 
 

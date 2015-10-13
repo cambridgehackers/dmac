@@ -14,7 +14,6 @@ all: testdma-$(BOARD) mkExample.bit
 
 run: testdma-$(BOARD) mkExample.bit
 	fpgajtag mkExample.bit
-	pciescanportal
 	LD_LIBRARY_PATH=. ./testdma-$(BOARD)
 
 mkExample.bit: verilog/mkExample.v
