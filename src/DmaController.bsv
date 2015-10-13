@@ -27,6 +27,8 @@ import FIFO::*;
 import FIFOF::*;
 import GetPut::*;
 import Connectable::*;
+
+import ConnectalConfig::*;
 import Pipe::*;
 import MemTypes::*;
 import MemReadEngine::*;

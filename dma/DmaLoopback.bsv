@@ -26,6 +26,7 @@ import FIFOF::*;
 import BRAMFIFO::*;
 import GetPut::*;
 import Connectable::*;
+import ConnectalConfig::*;
 import MemTypes::*;
 import HostInterface::*;
 import DmaController::*;
