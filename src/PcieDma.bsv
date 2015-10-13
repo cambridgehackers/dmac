@@ -7,6 +7,7 @@ import PcieHost::*;
 import PCIEWRAPPER3::*;
 import PcieTop::*;
 import ConnectalBramFifo::*;
+import ConnectalConfig::*;
 
 import DmaTopPins::*;
 import DmaController::*;

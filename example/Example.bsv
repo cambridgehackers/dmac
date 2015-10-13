@@ -2,6 +2,7 @@
 import FIFOF::*;
 import GetPut::*;
 import Connectable::*;
+import ConnectalConfig::*;
 
 import PcieDma::*;
 

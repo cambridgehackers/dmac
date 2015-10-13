@@ -1,15 +1,9 @@
 import Vector::*;
 import Pipe::*;
 import MemTypes::*;
+import ConnectalConfig::*;
 
 typedef 2 NumChannels;
-
-// matches definition in HostInterface.bsv
-`ifdef DataBusWidth
-typedef `DataBusWidth DataBusWidth;
-`else
-typedef 64 DataBusWidth;
-`endif
 
 interface DmaTopPins;
    // derived from pcie clock

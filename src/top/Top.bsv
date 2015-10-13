@@ -14,6 +14,8 @@ import DmaController::*;
 import DmaIndication::*;
 import DmaRequest::*;
 import DmaTopPins::*;
+import ConnectalConfig::*;
+`include "ConnectalProjectConfig.bsv"
 
 `ifndef IMPORT_HOSTIF
 (* synthesize *)
