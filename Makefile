@@ -1,4 +1,4 @@
 
-make -C src
-make -C example
-make -C doc
+all:
+	make -C src
+	make -C example
