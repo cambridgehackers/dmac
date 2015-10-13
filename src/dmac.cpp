@@ -73,6 +73,7 @@ DmaChannel::DmaChannel(int channel, DmaCallback *callbacks)
     dmaRequest->pint.busyType = BUSY_SPIN;
     //dmaRequest->burstLen(burstLenBytes);
     dmaIndication = new DmaIndication(wrapperNames[channel], poller, this, callbacks);
+    dmaRequest->burstLen(128);
 }
 
 void DmaChannel::checkIndications()
