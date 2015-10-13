@@ -26,8 +26,8 @@ DmaBuffer Class
    .. cpp:function:: int reference()
 
       Returns an object identifier for the object to pass to DMA
-      controller (via :cpp:ref:`DmaChannel::read` or
-      :cpp:ref:`DmaChannel::write`) and sends the address translation
+      controller (via :cpp:member:`DmaChannel::read` or
+      :cpp:member:`DmaChannel::write`) and sends the address translation
       table to the FPGA's MMU. Up to 32 objects may be mapped at one
       time.
 
