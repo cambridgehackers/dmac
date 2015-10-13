@@ -51,7 +51,7 @@ help:
 clean:
 	rm -rf $(BUILDDIR)/*
 
-html:
+html: images
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
@@ -190,3 +190,9 @@ pseudoxml:
 	$(SPHINXBUILD) -b pseudoxml $(ALLSPHINXOPTS) $(BUILDDIR)/pseudoxml
 	@echo
 	@echo "Build finished. The pseudo-XML files are in $(BUILDDIR)/pseudoxml."
+
+source/DmaController.png: source/DmaController.pdf
+	pdftoppm -png source/DmaController.pdf source/DmaController
+	mv source/DmaController-1.png source/DmaController.png
+
+images: source/DmaController.png

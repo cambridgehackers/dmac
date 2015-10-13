@@ -3,7 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-DMA Controller's documentation
+DMA Controller documentation
 ==============================
 
 Contents:
@@ -11,7 +11,10 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
+   dmacontroller.rst
+   example.rst
    pciedma.rst
+   dmaclasses.rst
 
 Indices and tables
 ==================

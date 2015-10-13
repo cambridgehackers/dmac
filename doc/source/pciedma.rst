@@ -1,6 +1,9 @@
 Package PcieDma
 ===============
 
+Typedefs and Structures
+-----------------------
+
 .. bsv:typedef:: DataBusWidth
 
    Width of data pipes, 128 bits for gen2 speeds.
@@ -25,6 +28,8 @@ Package PcieDma
 
       Indicates that this is the last data beat of a request.
 
+BSV Interface PcieDma
+---------------------
 
 .. bsv:interface:: PcieDma
 
@@ -48,5 +53,9 @@ Package PcieDma
 
       The PCIE pins to be exported to the top level of the design.
 
+BSV Module mkPcieDma
+--------------------
+
 .. bsv:module:: mkPcieDma
 
+   Implements a DMA controller connecting to the host via PCIe and exporting interface :bsv:interface:`PcieDma`.
