@@ -60,7 +60,7 @@ To run the example::
 
     cd dmac/example
     fpajtag mkExample.bit
-    LD_LIBRARY_PATH=. ./testdma-$(BOARD)
+    LD_LIBRARY_PATH=. ./testdma-vc709
 
 
 
