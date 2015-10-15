@@ -26,7 +26,7 @@ System Requirements
 
 This version was tested on Ubuntu 14.04 using bluesim and VC707 using
 Bluespec 2015.05.beta1 and should also work with 2014.07.A. It was
-tested with Vivado 2015.2 and should also work with 2014.4.
+tested with Vivado 2015.2 and should also work with 2014.4, 2015.1.
 
 The DMA controller requires the Connectal device driver to enable
 software to connect to the DMA controller in the FPGA. There are
@@ -37,7 +37,7 @@ Installation Instructions
 -------------------------
 
  * Install Bluespec 2014.07.A or newer
- * Install Vivado 2014.4 or newer
+ * Install Vivado 2014.4 or 2015.2
  * Install connectal::
 
     sudo apt-add-repository ppa:jamey-hicks/connectal
