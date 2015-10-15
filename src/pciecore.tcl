@@ -107,7 +107,9 @@ proc fpgamake_ipcore {core_name core_version ip_name params} {
     }
 }
 
-if {[version -short] >= "2015.2"} {
+if {[version -short] >= "2015.3"} {
+    set pcieversion {4.1}
+} elseif {[version -short] >= "2015.1"} {
     set pcieversion {4.0}
 } else {
     set pcieversion {3.0}
