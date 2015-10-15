@@ -20,7 +20,7 @@ SRCDIR=../src/
 
 # CONNECTALFLAGS += -D USE_DUAL_CLOCK_FIFOF --shared
 
-all: connectalsrc ipcore
+all: ipcore
 
 connectalsrc:
 	mkdir -p connectal/cpp connectal/bsv connectal/drivers/portalmem connectal/drivers/pcieportal connectal/verilog connectal/constraints
