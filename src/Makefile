@@ -20,9 +20,9 @@ SRCDIR=../src/
 
 # CONNECTALFLAGS += -D USE_DUAL_CLOCK_FIFOF --shared
 
-all: connectal ipcore
+all: connectalsrc ipcore
 
-connectal:
+connectalsrc:
 	mkdir -p connectal/cpp connectal/bsv connectal/drivers/portalmem connectal/drivers/pcieportal connectal/verilog connectal/constraints
 	cp $(CONNECTALDIR)/bsv/*.bsv connectal/bsv
 	cp $(CONNECTALDIR)/lib/bsv/*.bsv connectal/bsv
@@ -33,5 +33,7 @@ connectal:
 	cp $(CONNECTALDIR)/verilog/*.v connectal/verilog
 	cp $(CONNECTALDIR)/constraints/xilinx/*.xdc connectal/constraints
 
-ipcore:
+ipcore: ip/vc709/pcie3_7x_0/pcie3_7x_0.xci
+
+ip/vc709/pcie3_7x_0/pcie3_7x_0.xci:
 	vivado -mode batch -source pciecore.tcl
