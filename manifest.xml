@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<manifest>
+  <remote  name="cambridgehackers"
+           fetch="https://github.com/cambridgehackers" />
+
+  <default revision="master"
+           remote="cambridgehackers"
+           sync-j="4" />
+
+  <project path="connectal" revision="master" remote="cambridgehackers" name="connectal" />
+  <project path="dmac" revision="master" remote="cambridgehackers" name="dmac" />
+  <project path="fpgajtag" revision="master" remote="cambridgehackers" name="fpgajtag" />
+  <project path="pciescan" revision="master" remote="cambridgehackers" name="pciescan" />
+</manifest>
