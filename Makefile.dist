@@ -17,5 +17,7 @@ install: all
 	install -m644 connectal/generated/xilinx/*.bsv $(DESTDIR)$(PREFIX)/share/dmac/bsv
 	install -d -m755 $(DESTDIR)$(PREFIX)/share/dmac/constraints
 	install -m644 connectal/constraints/xilinx/vc709.xdc $(DESTDIR)$(PREFIX)/share/dmac/constraints
+	install -d -m755 $(DESTDIR)$(PREFIX)/share/dmac/verilog
+	install -m644 connectal/verilog/PositiveReset.v $(DESTDIR)$(PREFIX)/share/dmac/verilog
 	install -m755 connectal/pcie/pcieflat $(DESTDIR)$(PREFIX)/bin/pcieflat
 
