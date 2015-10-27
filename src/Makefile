@@ -1,26 +1,28 @@
 
 ## default location of connectal
 CONNECTALDIR?=/usr/share/connectal
+PREFIX?=/usr/local
 
-## refer to the files in this directory via $(DMADIR)/ because this Makefile is included in ../dma128/Makefile
-SRCDIR=../src/
+all: libdmac-vc709.so libdmac-bluesim.so
 
-# S2H_INTERFACES = DmaRequest:DmaTop.request0,request1
-# H2S_INTERFACES = DmaTop:DmaIndication,DmaIndication
-# MEM_READ_INTERFACES = lDmaTop.readClient
-# MEM_WRITE_INTERFACES = lDmaTop.writeClient
-# BSVFILES = $(SRCDIR)/DmaController.bsv
-# CPPFILES= ../src/dmac.cpp
-# PIN_TYPE=DmaTopPins
-# PIN_TYPE_INCLUDE=DmaTopPins
+install: all
+	install -d -m755 $(DESTDIR)$(PREFIX)/include/dmac $(DESTDIR)$(PREFIX)/lib $(DESTDIR)$(PREFIX)/share/dmac/bsv $(DESTDIR)$(PREFIX)/share/dmac/tcl
+	install -m644 Makefile.dmac $(DESTDIR)$(PREFIX)/share/dmac
+	install -m644 dmac.h $(DESTDIR)$(PREFIX)/include/dmac
+	install -m644 lib*.so $(DESTDIR)$(PREFIX)/lib
+	install -m644 *.bsv top/*.bsv generated/*.bsv $(DESTDIR)$(PREFIX)/share/dmac/bsv
+	install -m644 pciecore.tcl $(DESTDIR)$(PREFIX)/share/dmac/tcl
 
-# include $(CONNECTALDIR)/Makefile.connectal
+PORTAL_INFRA := portal.c transportHardware.c transportSocket.c portalJson.c portalPrintf.c poller.cpp sock_utils.c timer.c dmaManager.c platformMemory.cpp
+GENERATED_CPP=GeneratedCppCallbacks.cpp MemServerRequest.c MemServerRequestJson.c MMURequest.c MMURequestJson.c MemServerIndication.c MemServerIndicationJson.c MMUIndication.c MMUIndicationJson.c DmaRequest.c DmaRequestJson.c DmaIndication.c DmaIndicationJson.c
+PORTAL_SRC_FILES := $(addprefix ../src/connectal/cpp/, $(PORTAL_INFRA)) \
+                    $(addprefix ../src/generated/, $(GENERATED_CPP))
+SOURCES = ../src/dmac.cpp $(PORTAL_SRC_FILES)
 
-# BURST_LEN_SIZE=10
+CFLAGS = -I../src -I../src/connectal/cpp -I../src/generated -I../src/connectal
 
-# CONNECTALFLAGS += -D USE_DUAL_CLOCK_FIFOF --shared
-
-all: ipcore
+libdmac-%.so:
+	$(Q)g++ -shared -fpic $(CFLAGS) -DBOARD_$(*) -o $@  $(SOURCES) $(LDLIBS)
 
 connectalsrc:
 	mkdir -p connectal/cpp connectal/bsv connectal/drivers/portalmem connectal/drivers/pcieportal connectal/verilog connectal/constraints
@@ -33,7 +35,3 @@ connectalsrc:
 	cp $(CONNECTALDIR)/verilog/*.v connectal/verilog
 	cp $(CONNECTALDIR)/constraints/xilinx/*.xdc connectal/constraints
 
-ipcore: ip/vc709/pcie3_7x_0/pcie3_7x_0.xci
-
-ip/vc709/pcie3_7x_0/pcie3_7x_0.xci:
-	vivado -mode batch -source pciecore.tcl

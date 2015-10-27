@@ -1,0 +1,21 @@
+
+PREFIX?=/usr/local
+BINDIR?=$(PREFIX)/bin
+
+all:
+	$(MAKE) -C fpgajtag all
+	$(MAKE) -C pciescan all
+	$(MAKE) -C src      all
+
+install: all
+	install -d -m755 $(DESTDIR)$(BINDIR)
+	$(MAKE) PREFIX=$(PREFIX) -C fpgajtag install
+	$(MAKE) -C pciescan install
+	$(MAKE) -C src      install
+	install -m644 connectal/bsv/*.bsv $(DESTDIR)$(PREFIX)/share/dmac/bsv
+	install -m644 connectal/lib/bsv/*.bsv $(DESTDIR)$(PREFIX)/share/dmac/bsv
+	install -m644 connectal/generated/xilinx/*.bsv $(DESTDIR)$(PREFIX)/share/dmac/bsv
+	install -d -m755 $(DESTDIR)$(PREFIX)/share/dmac/constraints
+	install -m644 connectal/constraints/xilinx/vc709.xdc $(DESTDIR)$(PREFIX)/share/dmac/constraints
+	install -m755 connectal/pcie/pcieflat $(DESTDIR)$(PREFIX)/bin/pcieflat
+
