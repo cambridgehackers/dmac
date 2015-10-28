@@ -1,4 +1,5 @@
-DMAC_DIR?=/usr/share/dmac
+PREFIX?=/usr/local
+DMAC_DIR?=$(PREFIX)/share/dmac
 
 DMAC_BSV_DIR = $(DMAC_DIR)/bsv
 

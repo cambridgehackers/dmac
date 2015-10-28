@@ -1,10 +1,13 @@
 set BLUESPECDIR $env(BLUESPECDIR)
+set PREFIX "/usr/local"
+if [info exists env(PREFIX)] {
+    set PREFIX "$env(PREFIX)"
+}
+set DMAC_DIR "$PREFIX/share/dmac"
 if [info exists env(DMAC_DIR)] {
     set DMAC_DIR $env(DMAC_DIR)
 } elseif [info exists env(DESTDIR)] {
-    set DMAC_DIR "$env(DESTDIR)/usr/share/dmac"
-} else {
-    set DMAC_DIR /usr/share/dmac
+    set DMAC_DIR "$env(DESTDIR)$PREFIX/share/dmac"
 }
 
 create_project vc709 vc709 -part xc7vx690tffg1761-2
