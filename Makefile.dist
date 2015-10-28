@@ -21,3 +21,5 @@ install: all
 	install -m644 connectal/verilog/PositiveReset.v $(DESTDIR)$(PREFIX)/share/dmac/verilog
 	install -m755 connectal/pcie/pcieflat $(DESTDIR)$(PREFIX)/bin/pcieflat
 
+test:
+	cd example; $(MAKE) PREFIX=$(PREFIX)
