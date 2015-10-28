@@ -193,8 +193,8 @@ pseudoxml:
 	@echo
 	@echo "Build finished. The pseudo-XML files are in $(BUILDDIR)/pseudoxml."
 
-source/DmaController.png: source/DmaController.pdf
-	pdftoppm -png source/DmaController.pdf source/DmaController
-	mv source/DmaController-1.png source/DmaController.png
+source/%.png: source/%.pdf
+	pdftoppm -png source/$(*).pdf source/$(*)
+	mv source/$(*)-1.png source/$(*).png
 
 images: source/DmaController.png source/DmaSimulation.png
