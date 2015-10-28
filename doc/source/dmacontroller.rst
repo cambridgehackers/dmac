@@ -28,22 +28,31 @@ This version was tested on Ubuntu 14.04 using bluesim and VC707 using
 Bluespec 2015.05.beta1 and should also work with 2014.07.A. It was
 tested with Vivado 2015.2 and should also work with 2014.4, 2015.1.
 
-The DMA controller requires the Connectal device driver to enable
-software to connect to the DMA controller in the FPGA. There are
-prebuilt connectal packages for Ubuntu 12.04 and 14.04 that contain
-DKMS sources for the required device drivers.
+The DMA controller requires two device drivers, portalmem and
+pcieportal. The source release includes DKMS sources so that the
+driver will be compiled for the kernel that is in use on the machine
+and will be automatically updated if the kernel is updated.
 
 Installation Instructions
 -------------------------
 
  * Install Bluespec 2014.07.A or newer
  * Install Vivado 2014.4 or 2015.2
- * Install connectal::
 
-    sudo apt-add-repository ppa:jamey-hicks/connectal
-    sudo apt-get update
-    sudo apt-get install connectal
+If you previously installed connectal::
 
+    sudo apt-get purge connectal fpgamake fpgajtag buildcache pciescan
+
+To install into /usr/local::
+
+    tar -zxvf dmac-15.10.4.tar.gz
+    cd dmac-15.10.4
+    make
+    sudo make install
+
+If you prefer to install into /usr::
+
+    sudo make PREFIX=/usr
 
 
 Building the Example
@@ -51,16 +60,25 @@ Building the Example
 
 Build the example using make::
 
-    cd dmac; make
+    cd dmac-15.10.4/example; make
 
 Running the Example
 --------------------
 
-To run the example::
+To program the FPGA with the example design::
 
-    cd dmac/example
+    cd dmac-15.10.4/example
     fpajtag mkExample.bit
-    LD_LIBRARY_PATH=. ./testdma-vc709
+
+The first time you use a system after the FPGA is programmed, you will have to reboot::
+
+    sudo reboot
+
+Now run the example::
+
+    cd dmac-15.10.4/example
+    LD_LIBRARY_PATH=/usr/local/lib ./testdma-vc709
+
 
 
 
