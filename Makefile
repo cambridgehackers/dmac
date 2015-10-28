@@ -20,3 +20,9 @@ build:
 
 distinstall:
 	$(MAKE) -C $(DISTDIR) install
+
+TDIST := $(PWD)/../tdist
+
+disttest:
+	cd $(DISTDIR); make DESTDIR=$(TDIST) PREFIX=/usr all install test
+
