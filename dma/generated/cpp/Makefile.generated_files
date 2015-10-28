@@ -1,2 +1,0 @@
-
-GENERATED_CPP=GeneratedCppCallbacks.cpp MemServerRequest.c MemServerRequestJson.c MMURequest.c MMURequestJson.c MemServerIndication.c MemServerIndicationJson.c MMUIndication.c MMUIndicationJson.c DmaRequest.c DmaRequestJson.c LoopbackControl.c LoopbackControlJson.c DmaIndication.c DmaIndicationJson.c
