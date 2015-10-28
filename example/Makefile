@@ -13,7 +13,7 @@ run: testdma-$(BOARD) mkExample.bit
 	fpgajtag mkExample.bit
 	LD_LIBRARY_PATH=. ./testdma-$(BOARD)
 
-mkExample.bit: verilog/mkExample.v
+mkExample.bit: verilog/mkExample.v ipcore
 	rm -fr vc709
 	vivado -mode batch -source impl.tcl
 	cp -v vc709/vc709.runs/impl_1/mkExample.bit mkExample.bit
@@ -23,7 +23,7 @@ verilog/mkExample.v: Example.bsv
 	bsc $(BSCFLAGS_COMMON) -u -verilog -g mkExample Example.bsv
 
 testdmacopy.o: testdmacopy.cpp
-	g++ -O -I../src -c testdmacopy.cpp
+	g++ -O -I$(DESTDIR)$(PREFIX)/include/dmac -c testdmacopy.cpp
 
 
 testdma-$(BOARD): testdmacopy.o
