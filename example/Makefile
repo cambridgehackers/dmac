@@ -1,6 +1,7 @@
 
 DTOP=.
 BOARD=vc709
+PREFIX?=/usr/local
 
 BSCFLAGS_COMMON = $(BSV_FLAGS_DMAC)
 BSCFLAGS_COMMON += +RTS -K46777216 -RTS -show-schedule
@@ -11,7 +12,7 @@ all: testdma-$(BOARD) mkExample.bit
 
 run: testdma-$(BOARD) mkExample.bit
 	fpgajtag mkExample.bit
-	LD_LIBRARY_PATH=. ./testdma-$(BOARD)
+	LD_LIBRARY_PATH=$(PREFIX)/lib ./testdma-$(BOARD)
 
 mkExample.bit: verilog/mkExample.v ipcore
 	rm -fr vc709
@@ -27,6 +28,6 @@ testdmacopy.o: testdmacopy.cpp
 
 
 testdma-$(BOARD): testdmacopy.o
-	g++ -O -o testdma-$(BOARD) testdmacopy.o -L$(DESTDIR)/usr/lib -ldmac-$(BOARD) -lpthread
+	g++ -O -o testdma-$(BOARD) testdmacopy.o -L$(DESTDIR)$(PREFIX)/lib -ldmac-$(BOARD) -lpthread
 
-include $(DESTDIR)/usr/share/dmac/Makefile.dmac
+include $(DESTDIR)$(PREFIX)/share/dmac/Makefile.dmac
