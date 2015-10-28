@@ -1,6 +1,4 @@
 
-## default location of connectal
-CONNECTALDIR?=/usr/share/connectal
 PREFIX?=/usr/local
 
 all: libdmac-vc709.so libdmac-bluesim.so
@@ -23,15 +21,4 @@ CFLAGS = -I../src -I../src/connectal/cpp -I../src/generated -I../src/connectal
 
 libdmac-%.so:
 	$(Q)g++ -shared -fpic $(CFLAGS) -DBOARD_$(*) -o $@  $(SOURCES) $(LDLIBS)
-
-connectalsrc:
-	mkdir -p connectal/cpp connectal/bsv connectal/drivers/portalmem connectal/drivers/pcieportal connectal/verilog connectal/constraints
-	cp $(CONNECTALDIR)/bsv/*.bsv connectal/bsv
-	cp $(CONNECTALDIR)/lib/bsv/*.bsv connectal/bsv
-	cp $(CONNECTALDIR)/generated/xilinx/*.bsv connectal/bsv
-	cp $(CONNECTALDIR)/cpp/* connectal/cpp
-	cp $(CONNECTALDIR)/drivers/portalmem/*.h connectal/drivers/portalmem
-	cp $(CONNECTALDIR)/drivers/pcieportal/*.h connectal/drivers/pcieportal
-	cp $(CONNECTALDIR)/verilog/*.v connectal/verilog
-	cp $(CONNECTALDIR)/constraints/xilinx/*.xdc connectal/constraints
 
