@@ -15,6 +15,11 @@ dist:
 	cp Makefile.version $(DISTDIR)
 	cp Makefile.dist $(DISTDIR)/Makefile
 
+dist_tgz:
+	rm -fr $(DISTDIR)
+	make dist
+	tar -zcf $(DISTDIR).tar.gz -C `dirname $(DISTDIR)` `basename $(DISTDIR)`
+
 build:
 	$(MAKE) -C $(DISTDIR) all
 
@@ -26,3 +31,8 @@ TDIST := $(PWD)/../tdist
 disttest:
 	cd $(DISTDIR); make DESTDIR=$(TDIST) PREFIX=/usr all install test
 
+testinstall:
+	@rm -fr $(TDIST)
+	cd $(DISTDIR); make DESTDIR=$(TDIST) install uninstall
+	@find $(TDIST) -type d
+	@find $(TDIST) -type f || echo 'stray files left by uninstall'
