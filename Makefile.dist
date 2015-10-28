@@ -16,6 +16,7 @@ install: all
 	$(MAKE) -C pciescan install
 	$(MAKE) -C src      install
 	cd connectal/drivers/pcieportal; $(MAKE) CONNECTALDIR=$(CURRENTDIR) PKG_NAME=dmac install-dkms
+	install -D -m644 connectal/etc/udev/rules.d/99-pcieportal.rules $(DESTDIR)/etc/udev/rules.d/99-pcieportal.rules
 	install -m644 connectal/bsv/*.bsv $(DESTDIR)$(PREFIX)/share/dmac/bsv
 	install -m644 connectal/lib/bsv/*.bsv $(DESTDIR)$(PREFIX)/share/dmac/bsv
 	install -m644 connectal/generated/xilinx/*.bsv $(DESTDIR)$(PREFIX)/share/dmac/bsv
@@ -24,7 +25,7 @@ install: all
 	install -d -m755 $(DESTDIR)$(PREFIX)/share/dmac/verilog
 	install -m644 connectal/verilog/PositiveReset.v $(DESTDIR)$(PREFIX)/share/dmac/verilog
 	install -m755 connectal/pcie/pcieflat $(DESTDIR)$(PREFIX)/bin/pcieflat
-	install -D -m755 connectal/etc/modules-load.d/connectal.conf $(DESTDIR)$(PREFIX)/etc/modules-load.d/connectal.conf
+	install -D -m755 connectal/etc/modules-load.d/connectal.conf $(DESTDIR)/etc/modules-load.d/connectal.conf
 ifeq ("$(DESTDIR)","")
 	echo dkms
 	dkms add build install -m dmac -v $(VERSION) --verbose
@@ -34,7 +35,8 @@ uninstall:
 	rm -fv $(DESTDIR)$(PREFIX)/bin/fpgajtag*
 	rm -fv $(DESTDIR)$(PREFIX)/bin/pcieflat
 	rm -fv $(DESTDIR)$(PREFIX)/bin/pciescan*
-	rm -fv $(DESTDIR)$(PREFIX)/etc/modules-load.d/connectal.conf
+	rm -fv $(DESTDIR)/etc/udev/rules.d/99-pcieportal.rules
+	rm -fv $(DESTDIR)/etc/modules-load.d/connectal.conf
 	rm -fv $(DESTDIR)$(PREFIX)/include/dmac/dmac.h
 	rm -fv $(DESTDIR)$(PREFIX)/lib/libdmac-*.so
 	rm -fvr $(DESTDIR)$(PREFIX)/share/dmac
