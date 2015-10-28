@@ -1,12 +1,19 @@
 set BLUESPECDIR $env(BLUESPECDIR)
+if [info exists env(DMAC_DIR)] {
+    set DMAC_DIR $env(DMAC_DIR)
+} elseif [info exists env(DESTDIR)] {
+    set DMAC_DIR "$env(DESTDIR)/usr/share/dmac"
+} else {
+    set DMAC_DIR /usr/share/dmac
+}
 
 create_project vc709 vc709 -part xc7vx690tffg1761-2
 set_property board_part xilinx.com:vc709:part0:1.6 [current_project]
 add_files verilog
-add_files -norecurse ../src/ip/vc709/pcie3_7x_0/pcie3_7x_0.xci
-add_files -fileset constrs_1 -norecurse ../src/connectal/constraints/vc709.xdc
+add_files -norecurse ./ip/vc709/pcie3_7x_0/pcie3_7x_0.xci
+add_files -fileset constrs_1 -norecurse $DMAC_DIR/constraints/vc709.xdc
 remove_files "verilog/mkMMURequestInverter.v verilog/mkMMURequestInverterV.v verilog/mkMemServerIndicationInverter.v verilog/mkMemServerIndicationInverterV.v verilog/mkMemServerRequestInverter.v verilog/mkMemServerRequestInverterV.v verilog/mkDmaRequestInverter.v verilog/mkDmaRequestInverterV.v verilog/mkMMUIndicationInverter.v verilog/mkMMUIndicationInverterV.v verilog/mkDmaIndicationInverter.v verilog/mkDmaIndicationInverterV.v verilog/mkEHR2BSV.v"
-add_files -norecurse ../src/connectal/verilog/PositiveReset.v
+add_files -norecurse $DMAC_DIR/verilog/PositiveReset.v
 add_files -norecurse "$BLUESPECDIR/Verilog.Vivado/BRAM2.v $BLUESPECDIR/Verilog.Vivado/SizedFIFO.v $BLUESPECDIR/Verilog/FIFO2.v"
 update_compile_order -fileset sources_1
 add_files -norecurse "$BLUESPECDIR/Verilog/SyncFIFO1.v $BLUESPECDIR/Verilog/FIFO1.v"
