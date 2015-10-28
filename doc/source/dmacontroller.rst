@@ -64,8 +64,8 @@ If you previously installed connectal::
 
 To install into /usr/local::
 
-    tar -zxvf dmac-15.10.4.tar.gz
-    cd dmac-15.10.4
+    tar -zxvf dmac-15.10.5.tar.gz
+    cd dmac-15.10.5
     make
     sudo make install
 
@@ -79,14 +79,14 @@ Building the Example
 
 Build the example using make::
 
-    cd dmac-15.10.4/example; make
+    cd dmac-15.10.5/example; make
 
 Running the Example
 --------------------
 
 To program the FPGA with the example design::
 
-    cd dmac-15.10.4/example
+    cd dmac-15.10.5/example
     fpajtag mkExample.bit
 
 The first time you use a system after the FPGA is programmed, you will have to reboot::
@@ -95,7 +95,7 @@ The first time you use a system after the FPGA is programmed, you will have to r
 
 Now run the example::
 
-    cd dmac-15.10.4/example
+    cd dmac-15.10.5/example
     LD_LIBRARY_PATH=/usr/local/lib ./testdma-vc709
 
 
