@@ -13,6 +13,19 @@ Up to TBD data channels are supported.
 
 .. _Fig-DmaController: Dma Controller
 
+Simulation
+----------
+
+The DMA Controller software API and hardware interfaces are portable across FPGAs and simulation.
+
+.. image:: DmaSimulation.*
+
+In simulation, the software process and simulator share memory via
+mmap() and coordinate via request and response messages sent over a
+unix socket.
+
+Simulator integration is accomplished via Bluespec import "BDPI" and SystemVerilog "DPI-C".
+
 Performance
 -----------
 
@@ -32,6 +45,12 @@ The DMA controller requires two device drivers, portalmem and
 pcieportal. The source release includes DKMS sources so that the
 driver will be compiled for the kernel that is in use on the machine
 and will be automatically updated if the kernel is updated.
+
+Simulators supported:
+
+ * Bluesim
+ * Verilator 3.878
+ * Xilinx xsim
 
 Installation Instructions
 -------------------------

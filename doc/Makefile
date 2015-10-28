@@ -197,4 +197,4 @@ source/DmaController.png: source/DmaController.pdf
 	pdftoppm -png source/DmaController.pdf source/DmaController
 	mv source/DmaController-1.png source/DmaController.png
 
-images: source/DmaController.png
+images: source/DmaController.png source/DmaSimulation.png
