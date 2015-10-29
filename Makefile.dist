@@ -9,6 +9,11 @@ all:
 	$(MAKE) -C pciescan all
 	$(MAKE) -C src      all
 
+.PHONY: example
+
+example:
+	$(MAKE) -C example
+
 install: all
 	install -d -m755 $(DESTDIR)$(BINDIR)
 	$(MAKE) PREFIX=$(PREFIX) -C fpgajtag install
