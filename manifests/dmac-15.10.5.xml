@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<manifest>
+  <remote fetch="https://github.com/cambridgehackers" name="cambridgehackers"/>
+  
+  <default remote="cambridgehackers" revision="master" sync-j="4"/>
+  
+  <project name="connectal" revision="460586a7e0e51c7ea8efc48fc32ca62e6d97d3f5" upstream="master"/>
+  <project name="dmac" revision="79ed46004f8098e648672383a2e426f8468bdb3a" upstream="master"/>
+  <project name="fpgajtag" revision="6f61ee8e6c034e09bc824dfb9fbb5a97d2d24087" upstream="master"/>
+  <project name="pciescan" revision="dc47338bd12e4ba79be96ab38ed7cd6575eccd7d" upstream="master"/>
+</manifest>
