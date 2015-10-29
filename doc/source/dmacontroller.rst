@@ -62,6 +62,10 @@ If you previously installed connectal::
 
     sudo apt-get purge connectal fpgamake fpgajtag buildcache pciescan
 
+Install build dependences::
+
+    sudo apt-get install zlib1g-dev libusb-1.0-0-dev
+
 To install into /usr/local::
 
     tar -zxvf dmac-15.10.5.tar.gz
