@@ -1,0 +1,5 @@
+doc/dmac.pdf
+doc/*.html
+doc/_images
+doc/_sources
+doc/_static

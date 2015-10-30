@@ -11,7 +11,7 @@ dist:
 	mkdir -p $(DISTDIR)/
 	rsync -avz --delete --exclude=.git doc/build/html/* $(DISTDIR)/doc
 	rsync -avz --delete --exclude=.git doc/build/latex/dmac.pdf $(DISTDIR)/doc
-	rsync -avz --delete --exclude=.git src example $(DISTDIR)
+	rsync -avz --delete --exclude=.git debian src example $(DISTDIR)
 	rsync -avz --delete --exclude=.git ../connectal $(DISTDIR)
 	rsync -avz --delete --exclude=.git ../fpgajtag $(DISTDIR)
 	rsync -avz --delete --exclude=.git ../pciescan $(DISTDIR)

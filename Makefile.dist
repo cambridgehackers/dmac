@@ -21,7 +21,7 @@ install: all
 	install -d -m755 $(DESTDIR)$(BINDIR)
 	$(MAKE) PREFIX=$(PREFIX) -C fpgajtag install
 	chmod u+s $(DESTDIR)$(PREFIX)/bin/fpgajtag
-	$(MAKE) -C pciescan install
+	$(MAKE) -C pciescan PREFIX=$(PREFIX)/bin install
 	$(MAKE) -C src      install
 	cd connectal/drivers/pcieportal; $(MAKE) CONNECTALDIR=$(CURRENTDIR) PKG_NAME=dmac install-dkms
 	install -D -m644 connectal/etc/udev/rules.d/99-pcieportal.rules $(DESTDIR)/etc/udev/rules.d/99-pcieportal.rules
@@ -54,4 +54,4 @@ endif
 	rm -fvr $(DESTDIR)/usr/src/dmac-*
 
 test:
-	cd example; $(MAKE) PREFIX=$(PREFIX)
+	#cd example; $(MAKE) PREFIX=$(PREFIX)
