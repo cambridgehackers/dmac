@@ -9,6 +9,9 @@ all:
 	$(MAKE) -C pciescan all
 	$(MAKE) -C src      all
 
+dependences:
+	apt-get install zlib1g-dev libusb-1.0-0-dev
+
 .PHONY: example
 
 example:
