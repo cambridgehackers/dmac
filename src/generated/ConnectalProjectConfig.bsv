@@ -22,3 +22,4 @@
 `define NUMBER_OF_LEDS 8
 `define PcieLanes 8
 `define BOARD_vc709 
+`define MEMENGINE_REQUEST_CYCLES
