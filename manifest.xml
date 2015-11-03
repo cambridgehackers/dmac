@@ -9,6 +9,8 @@
 
   <project path="connectal" revision="master" remote="cambridgehackers" name="connectal" />
   <project path="dmac" revision="master" remote="cambridgehackers" name="dmac" />
+  <project path="buildcache" revision="master" remote="cambridgehackers" name="buildcache" />
   <project path="fpgajtag" revision="master" remote="cambridgehackers" name="fpgajtag" />
+  <project path="fpgamake" revision="master" remote="cambridgehackers" name="fpgamake" />
   <project path="pciescan" revision="master" remote="cambridgehackers" name="pciescan" />
 </manifest>
