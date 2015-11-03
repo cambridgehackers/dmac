@@ -34,6 +34,7 @@ import MemTypes::*;
 import MemReadEngine::*;
 import MemWriteEngine::*;
 import HostInterface::*;
+`include "ConnectalProjectConfig.bsv"
 
 interface DmaRequest;
    //
@@ -92,6 +93,9 @@ module mkDmaController#(Vector#(numChannels,DmaIndication) indication)(DmaContro
    MemReadEngine#(DataBusWidth,DataBusWidth,NumOutstandingRequests,numChannels)  re <- mkMemReadEngineBuff(valueOf(BufferSizeBytes));
    MemWriteEngine#(DataBusWidth,DataBusWidth,NumOutstandingRequests,numChannels) we <- mkMemWriteEngineBuff(valueOf(BufferSizeBytes));
 
+   Vector#(numChannels, FIFO#(MemengineCmd)) readCmds <- replicateM(mkSizedFIFO(valueOf(NumOutstandingRequests)));
+   Vector#(numChannels, FIFO#(MemengineCmd)) writeCmds <- replicateM(mkSizedFIFO(valueOf(NumOutstandingRequests)));
+
    Vector#(numChannels, FIFO#(Tuple3#(Bit#(32),Bit#(32),Bit#(32)))) readReqs <- replicateM(mkSizedFIFO(valueOf(NumOutstandingRequests)));
    Vector#(numChannels, FIFO#(Tuple3#(Bit#(32),Bit#(32),Bit#(32)))) writeReqs <- replicateM(mkSizedFIFO(valueOf(NumOutstandingRequests)));
    Vector#(numChannels, FIFOF#(MemDataF#(DataBusWidth))) readFifo <- replicateM(mkFIFOF());
@@ -105,6 +109,11 @@ module mkDmaController#(Vector#(numChannels,DmaIndication) indication)(DmaContro
    for (Integer channel = 0; channel < valueOf(numChannels); channel = channel + 1) begin
        FIFO#(Bit#(8)) readTags <- mkSizedFIFO(valueOf(NumOutstandingRequests));
 
+      rule readReqRule;
+	 let cmd <- toGet(readCmds[channel]).get();
+	 readReqs[channel].enq(tuple3(cmd.sglId, cmd.base, cyclesReg));
+	 re.readServers[channel].request.put(cmd);
+      endrule
        rule readDataRule;
 	  let mdf <- toGet(re.readServers[channel].data).get();
 	  if (mdf.last)
@@ -113,11 +122,25 @@ module mkDmaController#(Vector#(numChannels,DmaIndication) indication)(DmaContro
        endrule
        rule readDoneRule;
 	  match { .objId, .base, .cycles } <- toGet(readReqs[channel]).get();
+`ifdef MEMENGINE_REQUEST_CYCLES
+	  let tagcycles <- toGet(re.readServers[channel].requestCycles).get();
+	  cycles = tagcycles.cycles;
+`endif
 	  let tag <- toGet(readTags).get();
 	  indication[channel].readDone(objId, base, tag, cycles-cyclesReg);
        endrule
+      rule writeReqRule;
+	 let cmd <- toGet(writeCmds[channel]).get();
+	 writeReqs[channel].enq(tuple3(cmd.sglId, cmd.base, cyclesReg));
+	 we.writeServers[channel].request.put(cmd);
+	 writeTags[channel].enq(extend(cmd.tag));
+      endrule
        rule writeDoneRule;
 	  match { .objId, .base, .cycles } <- toGet(writeReqs[channel]).get();
+`ifdef MEMENGINE_REQUEST_CYCLES
+	  let tagcycles <- toGet(we.writeServers[channel].requestCycles).get();
+	  cycles = tagcycles.cycles;
+`endif
 	  let done <- we.writeServers[channel].done.get();
 	  let tag <- toGet(writeTags[channel]).get();
 	  indication[channel].writeDone(objId, base, tag, cycles-cyclesReg);
@@ -130,23 +153,20 @@ module mkDmaController#(Vector#(numChannels,DmaIndication) indication)(DmaContro
 	      burstLenReg <= truncate(burstLenBytes);
 	 endmethod
 	 method Action read(Bit#(32) objId, Bit#(32) base, Bit#(32) bytes, Bit#(8) tag);
-	      readReqs[channel].enq(tuple3(objId, base, cyclesReg));
-	      re.readServers[channel].request.put(MemengineCmd {sglId: truncate(objId),
-								base: extend(base),
-								burstLen: extend(burstLenReg),
-								len: bytes,
-								tag: truncate(tag)
-								});
+	      readCmds[channel].enq(MemengineCmd {sglId: truncate(objId),
+						  base: extend(base),
+						  burstLen: extend(burstLenReg),
+						  len: bytes,
+						  tag: truncate(tag)
+						  });
 	 endmethod
 	 method Action write(Bit#(32) objId, Bit#(32) base, Bit#(32) bytes, Bit#(8) tag);
-	      writeReqs[channel].enq(tuple3(objId, base, cyclesReg));
-	      we.writeServers[channel].request.put(MemengineCmd {sglId: truncate(objId),
-								 base: extend(base),
-								 burstLen: extend(burstLenReg),
-								 len: bytes,
-								 tag: truncate(tag)
-								 });
-	      writeTags[channel].enq(tag);
+	    writeCmds[channel].enq(MemengineCmd {sglId: truncate(objId),
+						 base: extend(base),
+						 burstLen: extend(burstLenReg),
+						 len: bytes,
+						 tag: truncate(tag)
+						 });
 	 endmethod
 	 endinterface);
    endfunction
