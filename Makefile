@@ -32,7 +32,7 @@ distinstall:
 TDIST := $(PWD)/../tdist
 
 disttest:
-	cd $(DISTDIR); make DESTDIR=$(TDIST) PREFIX=/usr all install test
+	cd $(DISTDIR); make DESTDIR=$(TDIST) all install; (cd $(DISTDIR)/example; make DESTDIR=$(TDIST))
 
 testinstall:
 	@rm -fr $(TDIST)
