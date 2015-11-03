@@ -102,14 +102,14 @@ void ChannelWorker::run()
     for (int i = 0; i < numiters; i++) {
 	if (doRead) {
 	    fprintf(stderr, "[%s:%d] channel %d requesting dma read size=%d\n", __FUNCTION__, __LINE__, channelNumber, arraySize);
-	    int tag = waitCount;
+	    int tag = waitCount % 4;
 	    channel->read(buffers[0]->reference(), 0, arraySize, tag);
 	    waitCount++;
 	}
 
 	if (doWrite) {
 	    fprintf(stderr, "[%s:%d] channel %d requesting dma write size=%d\n", __FUNCTION__, __LINE__, channelNumber, arraySize);
-	    int tag = waitCount;
+	    int tag = waitCount % 4;
 	    channel->write(buffers[1]->reference(), 0, arraySize, tag);
 	    waitCount++;
 	}
