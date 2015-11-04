@@ -122,12 +122,13 @@ module mkDmaController#(Vector#(numChannels,DmaIndication) indication)(DmaContro
        endrule
        rule readDoneRule;
 	  match { .objId, .base, .cycles } <- toGet(readReqs[channel]).get();
+	  cycles = cycles - cyclesReg;
 `ifdef MEMENGINE_REQUEST_CYCLES
 	  let tagcycles <- toGet(re.readServers[channel].requestCycles).get();
 	  cycles = tagcycles.cycles;
 `endif
 	  let tag <- toGet(readTags).get();
-	  indication[channel].readDone(objId, base, tag, cycles-cyclesReg);
+	  indication[channel].readDone(objId, base, tag, cycles);
        endrule
       rule writeReqRule;
 	 let cmd <- toGet(writeCmds[channel]).get();
@@ -137,13 +138,14 @@ module mkDmaController#(Vector#(numChannels,DmaIndication) indication)(DmaContro
       endrule
        rule writeDoneRule;
 	  match { .objId, .base, .cycles } <- toGet(writeReqs[channel]).get();
+	  cycles = cycles - cyclesReg;
 `ifdef MEMENGINE_REQUEST_CYCLES
 	  let tagcycles <- toGet(we.writeServers[channel].requestCycles).get();
 	  cycles = tagcycles.cycles;
 `endif
 	  let done <- we.writeServers[channel].done.get();
 	  let tag <- toGet(writeTags[channel]).get();
-	  indication[channel].writeDone(objId, base, tag, cycles-cyclesReg);
+	  indication[channel].writeDone(objId, base, tag, cycles);
        endrule
    end
 
