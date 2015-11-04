@@ -32,7 +32,14 @@ distinstall:
 TDIST := $(PWD)/../tdist
 
 disttest:
-	cd $(DISTDIR); make DESTDIR=$(TDIST) all install; (cd $(DISTDIR)/example; make DESTDIR=$(TDIST))
+	rm -fr $(DISTDIR) $(TDIST); make dist
+	cd $(DISTDIR); make DESTDIR=$(TDIST) all install
+	cd $(DISTDIR)/example; make DESTDIR=$(TDIST)
+
+disttestbsim:
+	rm -fr $(DISTDIR) $(TDIST); make dist
+	cd $(DISTDIR); make DESTDIR=$(TDIST) all install
+	cd $(DISTDIR)/example; make DESTDIR=$(TDIST) BOARD=bluesim
 
 testinstall:
 	@rm -fr $(TDIST)
