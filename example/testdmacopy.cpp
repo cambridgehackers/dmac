@@ -73,13 +73,11 @@ public:
 	return totalBeats / (double)cycles;
     }
     void readDone ( uint32_t sglId, uint32_t base, const uint8_t tag, uint32_t cycles ) {
-	cycles *= -1;
 	fprintf(stderr, "[%s:%d] sglId=%d base=%08x tag=%d cycles=%d read bandwidth %5.2f MB/s link utilization %5.2f%%\n",
 		__FUNCTION__, __LINE__, sglId, base, tag, cycles, 16*250*linkUtilization(cycles), 100.0*linkUtilization(cycles, 1));
 	waitCount--;
     }
     void writeDone ( uint32_t sglId, uint32_t base, uint8_t tag, uint32_t cycles ) {
-	cycles *= -1;
 	fprintf(stderr, "[%s:%d] sglId=%d base=%08x tag=%d cycles=%d write bandwidth %5.2f MB/s link utilization %5.2f%%\n",
 		__FUNCTION__, __LINE__, sglId, base, tag, cycles, 16*250*linkUtilization(cycles), 100.0*linkUtilization(cycles, 1));
 	waitCount--;
