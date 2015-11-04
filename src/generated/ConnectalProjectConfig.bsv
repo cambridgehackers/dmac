@@ -1,3 +1,5 @@
+`define NumChannels 2
+
 `define ConnectalVersion 15.10.3
 `define NumberOfMasters 1
 `define PinType DmaTopPins
@@ -24,10 +26,8 @@
   `define NUMBER_OF_LEDS 8
   `define PcieLanes 8
   `define BOARD_vc709 
-  `define clock_attr (* no_default_clock, no_default_reset *)
 `else
   `define SIMULATION
   `define BsimHostInterface
-  `define clock_attr
 `endif
 

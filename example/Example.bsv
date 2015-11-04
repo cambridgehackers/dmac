@@ -11,7 +11,9 @@ interface Example;
    interface PciePins pcie;
 endinterface
 
-`clock_attr
+`ifndef BOARD_bluesim
+(* no_default_clock, no_default_reset *)
+`endif
 module mkExample
 `ifndef BOARD_bluesim
 #(Clock pci_sys_clk_p, Clock pci_sys_clk_n, Reset pci_sys_reset_n)
