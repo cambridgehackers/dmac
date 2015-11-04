@@ -1,3 +1,4 @@
+`include "ConnectalProjectConfig.bsv"
 
 import FIFOF::*;
 import GetPut::*;
@@ -10,10 +11,18 @@ interface Example;
    interface PciePins pcie;
 endinterface
 
-(* no_default_clock, no_default_reset *)
-module mkExample#(Clock pci_sys_clk_p, Clock pci_sys_clk_n, Reset pci_sys_reset_n)(Example);
+`clock_attr
+module mkExample
+`ifndef BOARD_bluesim
+#(Clock pci_sys_clk_p, Clock pci_sys_clk_n, Reset pci_sys_reset_n)
+`endif
+(Example);
 
-   PcieDma pcieDma <- mkPcieDma(pci_sys_clk_p, pci_sys_clk_n, pci_sys_reset_n);
+   PcieDma pcieDma <- mkPcieDma(
+`ifndef BOARD_bluesim
+      pci_sys_clk_p, pci_sys_clk_n, pci_sys_reset_n
+`endif
+      );
    let clock = pcieDma.clock();
    let reset = pcieDma.reset();
 
