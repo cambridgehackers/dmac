@@ -2,13 +2,22 @@
 DTOP=.
 BOARD=vc709
 PREFIX?=/usr/local
+DMAC_DIR?=../src
+CONNECTALDIR?=../../connectal
 
-BSCFLAGS_COMMON = $(BSV_FLAGS_DMAC)
+BSCFLAGS_COMMON = $(BSV_FLAGS_DMAC) -D BOARD_$(BOARD)
 BSCFLAGS_COMMON += +RTS -K46777216 -RTS -show-schedule
-BSCPATHFLAGS=  -bdir $(DTOP)/obj -vdir $(DTOP)/verilog -simdir $(DTOP)/obj -info-dir $(DTOP)/obj -D BOARD_$(BOARD)
+BSCPATHFLAGS=  -bdir $(DTOP)/obj -vdir $(DTOP)/verilog -simdir $(DTOP)/obj -info-dir $(DTOP)/obj
 BSCFLAGS_COMMON += $(BSCWARNFLAGS) $(BSCOPTFLAGS) $(BSCPATHFLAGS) --wait-for-license
 
 all: testdma-$(BOARD) bits
+
+clean:
+	rm -fr *.so bsim testdma-bluesim testdma-vc709 obj verilog vc709 vivado.* *.o
+
+ConnectalProjectConfig.bsv: 
+	if [ -f $(DMAC_DIR)/bsv/ConnectalProjectConfig.bsv ] ; then cp -v $(DMAC_DIR)/bsv/ConnectalProjectConfig.bsv .; fi
+	if [ -f $(DMAC_DIR)/generated/ConnectalProjectConfig.bsv ] ; then cp -v $(DMAC_DIR)/generated/ConnectalProjectConfig.bsv .; fi
 
 ifneq ($(BOARD),bluesim)
 bits: mkExample.bit
@@ -22,7 +31,7 @@ mkExample.bit: verilog/mkExample.v ipcore
 	vivado -mode batch -source impl.tcl
 	cp -v vc709/vc709.runs/impl_1/mkExample.bit mkExample.bit
 
-verilog/mkExample.v: Example.bsv
+verilog/mkExample.v: Example.bsv ConnectalProjectConfig.bsv
 	mkdir -p obj verilog
 	bsc $(BSCFLAGS_COMMON) -u -g mkExample Example.bsv
 	$(Q)sed -i 's|// On .*|// timestamp removed|' verilog/*.v
@@ -31,12 +40,15 @@ verilog/mkExample.v: Example.bsv
 else
 bits: bsim
 
-obj/mkExample.ba: Example.bsv
+run: testdma-$(BOARD) bsim
+	PATH=.:$(PATH) LD_LIBRARY_PATH=.:../src catchsegv ./testdma-bluesim
+
+obj/mkExample.ba: Example.bsv ConnectalProjectConfig.bsv
 	mkdir -p obj verilog
-	bsc $(BSCFLAGS_COMMON) -u -g mkExample Example.bsv
+	bsc $(BSCFLAGS_COMMON) -sim -u -g mkExample Example.bsv
 
 bsim: obj/mkExample.ba
-	bsc $(BSCFLAGS_COMMON) -u -e mkExample -o bsim -L $(DESTDIR)$(PREFIX)/lib -l dmac-bluesim obj/mkExample.ba 
+	bsc $(BSCFLAGS_COMMON) -sim -u -e mkExample -o bsim -L $(DMAC_DIR) -l dmac-bluesim obj/mkExample.ba 
 
 endif
 
@@ -45,6 +57,6 @@ testdmacopy.o: testdmacopy.cpp
 
 
 testdma-$(BOARD): testdmacopy.o
-	g++ -O -o testdma-$(BOARD) testdmacopy.o -L$(DESTDIR)$(PREFIX)/lib -ldmac-$(BOARD) -lpthread
+	g++ -O -o testdma-$(BOARD) testdmacopy.o -L$(DMAC_DIR) -ldmac-$(BOARD) -lpthread
 
-include $(DESTDIR)$(PREFIX)/share/dmac/Makefile.dmac
+include $(DMAC_DIR)/Makefile.dmac
