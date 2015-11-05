@@ -2,8 +2,10 @@ import Vector::*;
 import Pipe::*;
 import MemTypes::*;
 import ConnectalConfig::*;
+import DmaConfig::*;
 
-typedef 2 NumChannels;
+`include "ConnectalProjectConfig.bsv"
+typedef `NumChannels NumChannels;
 
 interface DmaTopPins;
    // derived from pcie clock
