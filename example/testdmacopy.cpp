@@ -48,7 +48,7 @@ class ChannelWorker : public DmaCallback {
     static void *threadfn(void *c);
     void run();
 
-    static int started;
+    static volatile int started;
     static pthread_t *threads;
 
 public:
@@ -118,7 +118,7 @@ void ChannelWorker::run()
     }
 }
 
-int ChannelWorker::started = 0;
+volatile int ChannelWorker::started = 0;
 pthread_t *ChannelWorker::threads = 0;
 
 void ChannelWorker::runTest()
