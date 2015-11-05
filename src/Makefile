@@ -1,6 +1,6 @@
 
 PREFIX?=/usr/local
-CONNECTALDIR?=../../connectal
+CONNECTALDIR?=connectal
 
 all: bsvtops
 	$(MAKE) BOARD=vc709 libdmac-vc709.so
