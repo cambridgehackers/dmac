@@ -83,10 +83,11 @@ public:
     }
 };
 
-DmaChannel::DmaChannel(int channel, DmaCallback *callbacks)
-    : poller(new PortalPoller(0)), channel(channel)
+DmaChannel::DmaChannel(int channel, DmaCallback *callbacks, bool singleThreadedAccess)
+  : poller(new PortalPoller(0)), channel(channel), singleThreadedAccess(singleThreadedAccess)
 {
-    pthread_mutex_init(&channel_lock, 0);
+    if (!singleThreadedAccess)
+	pthread_mutex_init(&channel_lock, 0);
     dmaRequest    = new DmaRequestProxy(proxyNames[channel], poller);
     dmaRequest->pint.busyType = BUSY_SPIN;
     //dmaRequest->burstLen(burstLenBytes);
@@ -96,23 +97,23 @@ DmaChannel::DmaChannel(int channel, DmaCallback *callbacks)
 
 void DmaChannel::checkIndications()
 {
-    pthread_mutex_lock(&channel_lock);
+    if (!singleThreadedAccess) pthread_mutex_lock(&channel_lock);
     poller->event();
-    pthread_mutex_unlock(&channel_lock);
+    if (!singleThreadedAccess) pthread_mutex_unlock(&channel_lock);
 }
 
 int DmaChannel::read ( const uint32_t objId, const uint32_t base, const uint32_t bytes, const uint8_t tag )
 {
-    pthread_mutex_lock(&channel_lock);
+    if (!singleThreadedAccess) pthread_mutex_lock(&channel_lock);
     int v = dmaRequest->read(objId, base, bytes, tag);
-    pthread_mutex_unlock(&channel_lock);
+    if (!singleThreadedAccess) pthread_mutex_unlock(&channel_lock);
     return v;
 }
 
 int DmaChannel::write ( const uint32_t objId, const uint32_t base, const uint32_t bytes, const uint8_t tag )
 {
-    pthread_mutex_lock(&channel_lock);
+    if (!singleThreadedAccess) pthread_mutex_lock(&channel_lock);
     int v = dmaRequest->write(objId, base, bytes, tag);
-    pthread_mutex_unlock(&channel_lock);
+    if (!singleThreadedAccess) pthread_mutex_unlock(&channel_lock);
     return v;
 }

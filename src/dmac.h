@@ -53,11 +53,12 @@ class DmaChannel {
   DmaRequestProxy *dmaRequest;
   int channel;
   volatile int waitCount;
+  bool singleThreadedAccess;
   friend class DmaIndication;
   friend class DmaController;
   static void *threadfn(void *c);
 public:
-    DmaChannel(int channelnum, DmaCallback *callbacks = 0);
+    DmaChannel(int channelnum, DmaCallback *callbacks = 0, bool singleThreadedAccess = true);
     // check for notification of completion of DMA requests
     void checkIndications();
     // issue a DMA read request
