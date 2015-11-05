@@ -53,7 +53,7 @@ bsim: obj/mkExample.ba
 endif
 
 testdmacopy.o: testdmacopy.cpp
-	g++ -O -I$(DESTDIR)$(PREFIX)/include/dmac -c testdmacopy.cpp
+	g++ -O -I../src -c testdmacopy.cpp
 
 
 testdma-$(BOARD): testdmacopy.o
