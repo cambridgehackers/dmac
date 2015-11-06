@@ -1,0 +1,15 @@
+Source: pciescan
+Section: devel
+Priority: extra
+Maintainer: Jamey Hicks <jamey.hicks@gmail.com>
+Build-Depends: debhelper (>= 8.0.0)
+Standards-Version: 3.9.2
+Homepage: https://github.com/cambridgehackers/pciescan
+Vcs-Git: git://github.com/cambridgehackers/pciescan.git
+
+Package: pciescan
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Rescan PCIe FPGA after programming.
+ Rescan PCIe FPGA after programming.
+ .
