@@ -3,7 +3,6 @@ DTOP=.
 BOARD=vc709
 PREFIX?=/usr/local
 DMAC_DIR?=../src
-CONNECTALDIR?=../../connectal
 
 BSCFLAGS_COMMON = $(BSV_FLAGS_DMAC) -D BOARD_$(BOARD)
 BSCFLAGS_COMMON += +RTS -K46777216 -RTS -show-schedule

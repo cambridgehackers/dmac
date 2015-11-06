@@ -10,8 +10,8 @@ install: all
 	install -d -m755 $(DESTDIR)$(PREFIX)/include/dmac $(DESTDIR)$(PREFIX)/lib $(DESTDIR)$(PREFIX)/share/dmac/bsv $(DESTDIR)$(PREFIX)/share/dmac/tcl
 	install -m644 Makefile.dmac $(DESTDIR)$(PREFIX)/share/dmac
 	install -m644 dmac.h $(DESTDIR)$(PREFIX)/include/dmac
-	install -m644 lib*.so $(DESTDIR)$(PREFIX)/lib
-	install -m644 *.bsv top/*.bsv generated/*.bsv $(DESTDIR)$(PREFIX)/share/dmac/bsv
+	install -m644 lib*.* $(DESTDIR)$(PREFIX)/lib
+	install -m644 *.bsv generated/*.bsv $(DESTDIR)$(PREFIX)/share/dmac/bsv
 	install -m644 pciecore.tcl $(DESTDIR)$(PREFIX)/share/dmac/tcl
 
 clean:
@@ -69,14 +69,3 @@ libdmac-$(BOARD).a: $(PORTAL_OBJ_FILES)
 
 libdmac-%.so: $(PORTAL_SRC_FILES)
 	$(Q)g++ -shared -fpic $(CFLAGS) -o $@ $(SOURCES)
-
-connectalsrc:
-	mkdir -p connectal/cpp connectal/bsv connectal/drivers/portalmem connectal/drivers/pcieportal connectal/verilog connectal/constraints
-	cp $(CONNECTALDIR)/bsv/*.bsv connectal/bsv
-	cp $(CONNECTALDIR)/lib/bsv/*.bsv connectal/bsv
-	cp $(CONNECTALDIR)/generated/xilinx/*.bsv connectal/bsv
-	cp $(CONNECTALDIR)/cpp/* connectal/cpp
-	cp $(CONNECTALDIR)/drivers/portalmem/*.h connectal/drivers/portalmem
-	cp $(CONNECTALDIR)/drivers/pcieportal/*.h connectal/drivers/pcieportal
-	cp $(CONNECTALDIR)/verilog/*.v connectal/verilog
-	cp $(CONNECTALDIR)/constraints/xilinx/*.xdc connectal/constraints
