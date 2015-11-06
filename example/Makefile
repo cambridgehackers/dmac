@@ -16,8 +16,7 @@ clean:
 	rm -fr *.so bsim testdma-bluesim testdma-vc709 obj verilog vc709 vivado.* *.o
 
 ConnectalProjectConfig.bsv: 
-	if [ -f $(DMAC_DIR)/bsv/ConnectalProjectConfig.bsv ] ; then cp -v $(DMAC_DIR)/bsv/ConnectalProjectConfig.bsv .; fi
-	if [ -f $(DMAC_DIR)/generated/ConnectalProjectConfig.bsv ] ; then cp -v $(DMAC_DIR)/generated/ConnectalProjectConfig.bsv .; fi
+	if [ -f $(DMAC_DIR)/template/ConnectalProjectConfig.bsv ] ; then cp -v $(DMAC_DIR)/template/ConnectalProjectConfig.bsv .; fi
 
 ifneq ($(BOARD),bluesim)
 bits: mkExample.bit
@@ -28,7 +27,7 @@ run: testdma-$(BOARD) mkExample.bit
 
 mkExample.bit: verilog/mkExample.v ipcore
 	rm -fr vc709
-	vivado -mode batch -source impl.tcl
+	DMAC_DIR=$(DMAC_DIR) vivado -mode batch -source impl.tcl
 	cp -v vc709/vc709.runs/impl_1/mkExample.bit mkExample.bit
 
 verilog/mkExample.v: Example.bsv ConnectalProjectConfig.bsv

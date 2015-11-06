@@ -36,7 +36,7 @@ int arraySize = 128*1024;
 #endif
 int doWrite = 1;
 int doRead = 1;
-int numchannels = 1;
+int numchannels = 4;
 int numiters = 1;
 int burstLenBytes = 128;
 
