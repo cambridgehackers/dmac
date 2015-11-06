@@ -2,7 +2,6 @@ import Vector::*;
 import Pipe::*;
 import MemTypes::*;
 import ConnectalConfig::*;
-import DmaConfig::*;
 
 `include "ConnectalProjectConfig.bsv"
 typedef `NumChannels NumChannels;
