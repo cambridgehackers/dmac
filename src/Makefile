@@ -47,12 +47,12 @@ endef
 define cpp_rule
 $(call cpp_obj_file, $(1)): $(1)
 	$(Q)mkdir -p obj-$(BOARD)
-	g++ $(CFLAGS) -c -o $(call cpp_obj_file, $(1)) $(1)
+	g++ $(CFLAGS) -fPIC -c -o $(call cpp_obj_file, $(1)) $(1)
 endef
 define c_rule
 $(call c_obj_file, $(1)): $(1)
 	$(Q)mkdir -p obj-$(BOARD)
-	g++ $(CFLAGS) -c -o $(call c_obj_file, $(1)) $(1)
+	g++ $(CFLAGS) -fPIC -c -o $(call c_obj_file, $(1)) $(1)
 endef
 
 CPP_OBJ_FILES = $(call cpp_obj_file, $(CPP_SOURCES))
