@@ -27,10 +27,8 @@ install: all
 	cd $(CONNECTALDIR)/drivers/pcieportal; $(MAKE) CONNECTALDIR=$(CURRENTDIR) PKG_NAME=dmac install-dkms
 	install -D -m644 $(CONNECTALDIR)/etc/udev/rules.d/99-pcieportal.rules $(DESTDIR)/etc/udev/rules.d/99-pcieportal.rules
 	install -m644 $(CONNECTALDIR)/bsv/*.bsv $(DESTDIR)$(PREFIX)/share/dmac/bsv
-	install -m644 $(CONNECTALDIR)/lib/bsv/*.bsv $(DESTDIR)$(PREFIX)/share/dmac/bsv
-	install -m644 $(CONNECTALDIR)/generated/xilinx/*.bsv $(DESTDIR)$(PREFIX)/share/dmac/bsv
 	install -d -m755 $(DESTDIR)$(PREFIX)/share/dmac/constraints
-	install -m644 $(CONNECTALDIR)/constraints/xilinx/vc709.xdc $(DESTDIR)$(PREFIX)/share/dmac/constraints
+	install -m644 $(CONNECTALDIR)/constraints/* $(DESTDIR)$(PREFIX)/share/dmac/constraints
 	install -d -m755 $(DESTDIR)$(PREFIX)/share/dmac/verilog
 	install -m644 $(CONNECTALDIR)/verilog/PositiveReset.v $(DESTDIR)$(PREFIX)/share/dmac/verilog
 	install -m755 $(CONNECTALDIR)/pcie/pcieflat $(DESTDIR)$(PREFIX)/bin/pcieflat
@@ -63,8 +61,15 @@ connectalsrc:
 	cp ../connectal/lib/bsv/*.bsv src/connectal/bsv
 	cp ../connectal/generated/xilinx/*.bsv src/connectal/bsv
 	cp ../connectal/cpp/* src/connectal/cpp
-	cp ../connectal/drivers/portalmem/*.h src/connectal/drivers/portalmem
-	cp ../connectal/drivers/pcieportal/*.h src/connectal/drivers/pcieportal
+	mkdir -p src/connectal/etc/udev/rules.d src/connectal/etc/modules-load.d
+	cp -r ../connectal/etc/udev/rules.d src/connectal/etc/udev/
+	cp -r ../connectal/etc/modules-load.d src/connectal/etc/
+	mkdir -p src/connectal/generated/cpp src/connectal/scripts src/connectal/pcie
+	cp ../connectal/scripts/driver_signature.sed src/connectal/scripts
+	cp ../connectal/pcie/pcieflat src/connectal/pcie
+	cp ../connectal/generated/cpp/* src/connectal/generated/cpp
+	cp -r ../connectal/drivers/portalmem/* src/connectal/drivers/portalmem
+	cp -r ../connectal/drivers/pcieportal/* src/connectal/drivers/pcieportal
 	cp ../connectal/verilog/*.v src/connectal/verilog
 	cp ../connectal/constraints/xilinx/*.xdc src/connectal/constraints
 	rsync -av --exclude=.git --delete ../fpgajtag .
