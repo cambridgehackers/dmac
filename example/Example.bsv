@@ -29,7 +29,7 @@ module mkExample
    let reset = pcieDma.reset();
 
    for (Integer channel = 0; channel < valueOf(NumChannels); channel = channel + 1) begin
-      FIFOF#(MemDataF#(DataBusWidth)) buffer <- mkDualClockBramFIFOF(clock, reset, clock, reset);
+      Reg#(Bit#(16)) iter <- mkReg(0, clocked_by clock, reset_by reset);
       rule readDataRule;
 	 PipeOut#(MemDataF#(DataBusWidth)) readPipe = pcieDma.readData[channel];
 	 MemDataF#(DataBusWidth) md = readPipe.first();
@@ -39,9 +39,11 @@ module mkExample
       rule writeDataRule;
 	 // placeholder code to produce md
 	 // tag, first, and last are not checked by the library
-	 MemDataF#(DataBusWidth) md = MemDataF {data: 'hdada, tag: 0, first: False, last: False};
+	 MemDataF#(DataBusWidth) md = MemDataF {data: ('hdada << 32) | (fromInteger(channel) << 16) | extend(iter),
+						tag: 0, first: False, last: False};
 	 PipeIn#(MemDataF#(DataBusWidth)) writePipe = pcieDma.writeData[channel];
 	 writePipe.enq(md);
+	 iter <= iter + 1;
       endrule
    end
 
