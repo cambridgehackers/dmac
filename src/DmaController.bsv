@@ -87,8 +87,11 @@ function Bit#(dsz) memdatafToData(MemDataF#(dsz) mdf); return mdf.data; endfunct
 module mkDmaController#(Vector#(numChannels,DmaIndication) indication)(DmaController#(numChannels))
    provisos (Add#(1, a__, numChannels),
 	     Add#(b__, TLog#(numChannels), TAdd#(1, TLog#(TMul#(NumOutstandingRequests, numChannels)))),
-	     Add#(c__, TLog#(numChannels), 6), // why is this?
-	     Add#(d__, TLog#(numChannels), TLog#(TMul#(NumOutstandingRequests, numChannels)))
+	     Add#(c__, TLog#(numChannels), MemTagSize), // from MemReadEngine
+	     Add#(d__, TLog#(numChannels), TLog#(TMul#(NumOutstandingRequests, numChannels))),
+	     FunnelPipesPipelined#(1, numChannels, MemTypes::MemData#(128), 2),
+	     FunnelPipesPipelined#(1, numChannels, MemTypes::MemRequest, 2),
+	     FunnelPipesPipelined#(1, numChannels, Bit#(6), 2)
 	     );
    MemReadEngine#(DataBusWidth,DataBusWidth,NumOutstandingRequests,numChannels)  re <- mkMemReadEngineBuff(valueOf(BufferSizeBytes));
    MemWriteEngine#(DataBusWidth,DataBusWidth,NumOutstandingRequests,numChannels) we <- mkMemWriteEngineBuff(valueOf(BufferSizeBytes));
