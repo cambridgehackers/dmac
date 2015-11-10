@@ -24,11 +24,9 @@
 #include "portal.h"
 #include "sock_utils.h"
 #include <assert.h>
-#include <pthread.h>
 
 static int trace_socket; // = 1;
 
-static pthread_once_t once_control;
 static unsigned int tag_counter;
 #define MAX_SIMULATOR_TILES     4
 typedef struct bsim_fpga_map_entry{

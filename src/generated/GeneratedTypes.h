@@ -20,10 +20,10 @@ typedef struct TileControl {
 } TileControl;
 typedef enum IfcNames { 
   NoInterface,
-  IfcNames_MemServerRequestS2H,
-  IfcNames_MMURequestS2H,
-  IfcNames_MemServerIndicationH2S,
-  IfcNames_MMUIndicationH2S,
+  PlatformIfcNames_MemServerRequestS2H,
+  PlatformIfcNames_MMURequestS2H,
+  PlatformIfcNames_MemServerIndicationH2S,
+  PlatformIfcNames_MMUIndicationH2S,
   IfcNames_DmaRequestS2H0,
   IfcNames_DmaRequestS2H1,
   IfcNames_DmaRequestS2H2,
