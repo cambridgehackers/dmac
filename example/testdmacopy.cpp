@@ -36,7 +36,7 @@ int arraySize = 128*1024;
 #endif
 int doWrite = 1;
 int doRead = 1;
-int numchannels = 4;
+int numchannels = 1;
 int numiters = 1;
 int burstLenBytes = 128;
 
@@ -76,11 +76,13 @@ public:
 	fprintf(stderr, "[%s:%d] sglId=%d base=%08x tag=%d cycles=%d read bandwidth %5.2f MB/s link utilization %5.2f%%\n",
 		__FUNCTION__, __LINE__, sglId, base, tag, cycles, 16*250*linkUtilization(cycles), 100.0*linkUtilization(cycles, 1));
 	waitCount--;
+	fprintf(stderr, "[%s:%d] channel %d waiting for %d responses\n", __FUNCTION__, __LINE__, channelNumber, waitCount);
     }
     void writeDone ( uint32_t sglId, uint32_t base, uint8_t tag, uint32_t cycles ) {
 	fprintf(stderr, "[%s:%d] sglId=%d base=%08x tag=%d cycles=%d write bandwidth %5.2f MB/s link utilization %5.2f%%\n",
 		__FUNCTION__, __LINE__, sglId, base, tag, cycles, 16*250*linkUtilization(cycles), 100.0*linkUtilization(cycles, 1));
 	waitCount--;
+	fprintf(stderr, "[%s:%d] channel %d waiting for %d responses\n", __FUNCTION__, __LINE__, channelNumber, waitCount);
     }
     static void runTest();
 };
@@ -100,14 +102,14 @@ void ChannelWorker::run()
     for (int i = 0; i < numiters; i++) {
 	if (doRead) {
 	    fprintf(stderr, "[%s:%d] channel %d requesting dma read size=%d\n", __FUNCTION__, __LINE__, channelNumber, arraySize);
-	    int tag = waitCount % 4;
+	    int tag = 0;
 	    channel->read(buffers[0]->reference(), 0, arraySize, tag);
 	    waitCount++;
 	}
 
 	if (doWrite) {
 	    fprintf(stderr, "[%s:%d] channel %d requesting dma write size=%d\n", __FUNCTION__, __LINE__, channelNumber, arraySize);
-	    int tag = waitCount % 4;
+	    int tag = 1;
 	    channel->write(buffers[1]->reference(), 0, arraySize, tag);
 	    waitCount++;
 	}
