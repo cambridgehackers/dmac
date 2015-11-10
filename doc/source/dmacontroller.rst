@@ -49,8 +49,6 @@ and will be automatically updated if the kernel is updated.
 Simulators supported:
 
  * Bluesim
- * Verilator 3.878
- * Xilinx xsim
 
 Installation Instructions
 -------------------------
@@ -103,5 +101,45 @@ Now run the example::
     LD_LIBRARY_PATH=/usr/local/lib ./testdma-vc709
 
 
+ConnectalProjectConfig.bsv
+------------------------------
 
+When you build the example, it copies
+dmac/src/template/ConnectalProjectConfig.bsv to the example directory
+if there is not already a copy.
 
+Some of the parameters in this file may be changed in order to configure the DMA controller.
+
+ * NumChannels (default 8)
+
+   Specifies the number of DMA channels implemented by the controller. The maximum is 8, unless the interface names are updated.
+
+ * DataBusWidth (default 128)
+
+   Specifies the data width of the read and write pipes exported by
+   the DMA controller. It may be changed to 128, 64, or 32, but
+   performance for a single channel will be maximized at width 128.
+
+ * MainClockPeriod (default 4ns)
+
+   Specifies the clock period of the mkPcieDma.clock(). By default,
+   this clock is the same as the user clock supplied by the Xilinx
+   PCIe core.
+
+   If it is changed, then the application logic may be run at a
+   different speed, and SyncFIFOFs are interposed between the user
+   logic and the PCIe core. This is likely to degrade performance but
+   may be useful for development purposes.
+
+PCIe Vendor and Device ID
+-------------------------
+
+The PCIe vendor ID and device ID is set to 1be7:c100.
+
+This may be changed, but it currently needs to be updated in several files:
+
+ * dmac/pciescan/pciescan.sh
+ * dmac/src/pciecore.tcl
+ * dmac/debian/dmac.udev
+ * dmac/src/connectal/drivers/pcieportal/pcieportal.c
+ * dmac/src/connectal/etc/udev/rules.d/99-pcieportal.rules
