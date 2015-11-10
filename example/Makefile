@@ -6,7 +6,7 @@ DMAC_DIR?=../src
 
 BSCFLAGS_COMMON = $(BSV_FLAGS_DMAC) -D BOARD_$(BOARD)
 BSCFLAGS_COMMON += +RTS -K46777216 -RTS -show-schedule
-BSCPATHFLAGS=  -bdir $(DTOP)/obj -vdir $(DTOP)/verilog -simdir $(DTOP)/obj -info-dir $(DTOP)/obj
+BSCPATHFLAGS=  -bdir $(DTOP)/obj-$(BOARD) -vdir $(DTOP)/verilog -simdir $(DTOP)/obj-$(BOARD) -info-dir $(DTOP)/obj-$(BOARD)
 BSCFLAGS_COMMON += $(BSCWARNFLAGS) $(BSCOPTFLAGS) $(BSCPATHFLAGS) --wait-for-license
 
 all: testdma-$(BOARD) bits
@@ -22,7 +22,7 @@ bits: mkExample.bit
 
 run: testdma-$(BOARD) mkExample.bit
 	fpgajtag mkExample.bit
-	LD_LIBRARY_PATH=$(PREFIX)/lib ./testdma-$(BOARD)
+	LD_LIBRARY_PATH=$(PREFIX)/lib NOPROGRAM=1 ./testdma-$(BOARD)
 
 mkExample.bit: verilog/mkExample.v ipcore
 	rm -fr vc709
@@ -30,7 +30,7 @@ mkExample.bit: verilog/mkExample.v ipcore
 	cp -v vc709/vc709.runs/impl_1/mkExample.bit mkExample.bit
 
 verilog/mkExample.v: Example.bsv ConnectalProjectConfig.bsv
-	mkdir -p obj verilog
+	mkdir -p obj-$(BOARD) verilog
 	bsc $(BSCFLAGS_COMMON) -u -g mkExample Example.bsv
 	$(Q)sed -i 's|// On .*|// timestamp removed|' verilog/*.v
 	$(Q)sed -i 's|  wire.*PROBE[,;]|(* mark_debug="true" *)&|' verilog/*.v 
@@ -41,12 +41,12 @@ bits: bsim
 run: testdma-$(BOARD) bsim
 	PATH=.:$(PATH) LD_LIBRARY_PATH=.:../src catchsegv ./testdma-bluesim
 
-obj/mkExample.ba: Example.bsv ConnectalProjectConfig.bsv
-	mkdir -p obj verilog
+obj-$(BOARD)/mkExample.ba: Example.bsv ConnectalProjectConfig.bsv
+	mkdir -p obj-$(BOARD) verilog
 	bsc $(BSCFLAGS_COMMON) -sim -u -g mkExample Example.bsv
 
-bsim: obj/mkExample.ba
-	bsc $(BSCFLAGS_COMMON) -sim -u -e mkExample -o bsim -L $(DMAC_DIR) -l dmac-bluesim obj/mkExample.ba 
+bsim: obj-$(BOARD)/mkExample.ba
+	bsc $(BSCFLAGS_COMMON) -sim -u -e mkExample -o bsim -L $(DMAC_DIR) -l dmac-bluesim obj-$(BOARD)/mkExample.ba 
 
 endif
 
