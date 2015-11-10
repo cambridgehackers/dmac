@@ -27,6 +27,7 @@ import FIFO::*;
 import FIFOF::*;
 import GetPut::*;
 import Connectable::*;
+import Probe::*;
 
 import ConnectalConfig::*;
 import Pipe::*;
@@ -109,18 +110,31 @@ module mkDmaController#(Vector#(numChannels,DmaIndication) indication)(DmaContro
       cyclesReg <= cyclesReg + 1;
    endrule
 
+   Vector#(numChannels, Probe#(Bit#(MemTagSize))) probe_readReq <- replicateM(mkProbe);
+   Vector#(numChannels, Probe#(Bool)) probe_readLast <- replicateM(mkProbe);
+   Vector#(numChannels, Probe#(Bit#(8))) probe_readDone <- replicateM(mkProbe);
+   Vector#(numChannels, Probe#(Bit#(32))) probe_readCount <- replicateM(mkProbe);
+
    for (Integer channel = 0; channel < valueOf(numChannels); channel = channel + 1) begin
-       FIFO#(Bit#(8)) readTags <- mkSizedFIFO(valueOf(NumOutstandingRequests));
+      FIFO#(Bit#(8)) readTags <- mkSizedFIFO(valueOf(NumOutstandingRequests));
+      Reg#(Bit#(32)) readCount <- mkReg(0);
 
       rule readReqRule;
 	 let cmd <- toGet(readCmds[channel]).get();
 	 readReqs[channel].enq(tuple3(cmd.sglId, cmd.base, cyclesReg));
+	 probe_readReq[channel] <= cmd.tag;
 	 re.readServers[channel].request.put(cmd);
       endrule
        rule readDataRule;
 	  let mdf <- toGet(re.readServers[channel].data).get();
-	  if (mdf.last)
+	  probe_readLast[channel] <= mdf.last;
+	  Bit#(32) count = readCount + 1;
+	  if (mdf.last) begin
 	     readTags.enq(extend(mdf.tag));
+	     count = 0;
+	  end
+	  probe_readCount[channel] <= count;
+	  readCount <= count;
 	  readFifo[channel].enq(mdf);
        endrule
        rule readDoneRule;
@@ -131,6 +145,7 @@ module mkDmaController#(Vector#(numChannels,DmaIndication) indication)(DmaContro
 	  cycles = tagcycles.cycles;
 `endif
 	  let tag <- toGet(readTags).get();
+	  probe_readDone[channel] <= tag;
 	  indication[channel].readDone(objId, base, tag, cycles);
        endrule
       rule writeReqRule;
