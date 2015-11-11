@@ -66,8 +66,8 @@ Install build dependences::
 
 To install into /usr/local::
 
-    tar -zxvf dmac-15.10.5.tar.gz
-    cd dmac-15.10.5
+    tar -zxvf dmac-15.11.2.tar.gz
+    cd dmac-15.11.2
     make
     sudo make install
 
@@ -81,14 +81,14 @@ Building the Example
 
 Build the example using make::
 
-    cd dmac-15.10.5/example; make
+    cd dmac-15.11.2/example; make
 
 Running the Example
 --------------------
 
 To program the FPGA with the example design::
 
-    cd dmac-15.10.5/example
+    cd dmac-15.11.2/example
     fpajtag mkExample.bit
 
 The first time you use a system after the FPGA is programmed, you will have to reboot::
@@ -97,8 +97,8 @@ The first time you use a system after the FPGA is programmed, you will have to r
 
 Now run the example::
 
-    cd dmac-15.10.5/example
-    LD_LIBRARY_PATH=/usr/local/lib ./testdma-vc709
+    cd dmac-15.11.2/example
+    LD_LIBRARY_PATH=/usr/local/lib NOPROGRAM=1 ./testdma-vc709
 
 
 ConnectalProjectConfig.bsv
