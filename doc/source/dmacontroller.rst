@@ -75,6 +75,21 @@ If you prefer to install into /usr::
 
     sudo make PREFIX=/usr
 
+The driver adjusts PCIe bus parameters for performance. In order to do
+so, the kernel requires the following kernel command line argument::
+
+    pci=pcie_bus_perf
+
+On machines using grub, this can be added to /etc/default/grub::
+
+    GRUB_CMDLINE_LINUX="pci=pcie_bus_perf"
+
+and then run::
+
+    update-grub
+    reboot
+
+
 
 Building the Example
 --------------------
