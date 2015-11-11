@@ -74,3 +74,15 @@ connectalsrc:
 	cp ../connectal/constraints/xilinx/*.xdc src/connectal/constraints
 	rsync -av --exclude=.git --delete ../fpgajtag .
 	rsync -av --exclude=.git --delete ../pciescan .
+
+publish:
+	cd doc; rm -fr build; make html latexpdf
+	rm -fr ../dmac-$(VERSION)
+	git clone . ../dmac-$(VERSION)
+	cp -fv example/mkExample.bit ../dmac-$(VERSION)/example
+	cp -fv doc/build/latex/dmac.pdf ../dmac-$(VERSION)/doc
+	rsync -av doc/build/html ../dmac-$(VERSION)/doc
+	mkdir -p manifests
+	repo manifest -r -o manifests/manifest-$(VERSION).xml
+	rsync -av manifests ../dmac-$(VERSION)/
+	cd ..; tar -zcvf ../dmac-$(VERSION).tar.gz dmac-$(VERSION)
