@@ -30,6 +30,9 @@ static int wrapperNames[] = {
 DmaManager *mgr;
 void initDmaManager()
 {
+#ifndef SIMULATION
+    noprogram = 1;
+#endif
     if (!mgr)
 	mgr = platformInit();
 }
@@ -86,6 +89,7 @@ public:
 DmaChannel::DmaChannel(int channel, DmaCallback *callbacks, bool singleThreadedAccess)
   : poller(new PortalPoller(0)), channel(channel), singleThreadedAccess(singleThreadedAccess)
 {
+    initDmaManager();
     if (!singleThreadedAccess)
 	pthread_mutex_init(&channel_lock, 0);
     dmaRequest    = new DmaRequestProxy(proxyNames[channel], poller);
