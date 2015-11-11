@@ -54,7 +54,7 @@ testdmacopy.o: testdmacopy.cpp
 	g++ -O -I../src -c testdmacopy.cpp
 
 
-testdma-$(BOARD): testdmacopy.o
+testdma-$(BOARD): testdmacopy.o $(DMAC_DIR)/libdmac-$(BOARD).a
 	g++ -O -o testdma-$(BOARD) testdmacopy.o -L$(DMAC_DIR) -ldmac-$(BOARD) -lpthread
 
 include $(DMAC_DIR)/Makefile.dmac
