@@ -285,7 +285,8 @@ module mkPcieEndpointX7(PcieEndpointX7#(PcieLanes));
 	 rqBackpressure <= False;
 	 let count = rqBackpressureCycles;
 	 count[15] = ~rqBackpressureCount[15];
-	 rqBackpressureCount <= count;
+	 if (count > 5)
+	    rqBackpressureCount <= count;
 	 rqBackpressureCountSum <= rqBackpressureCountSum + extend(count);
 	 rqBackpressureEvents <= rqBackpressureEvents + 1;
 	 probe_rqBackpressure <= False;
@@ -617,7 +618,7 @@ module mkPcieEndpointX7(PcieEndpointX7#(PcieLanes));
       return toPipeOut(changeFifo);
    endmodule
 
-`ifdef FOO
+`ifndef FOO
    Vector#(22,Tuple2#(Pcie3CfgType,Bit#(24))) changeValues = vec(tuple2(Pcie3Cfg_current_speed, extend(pcie_ep.cfg.current_speed)),
       tuple2(Pcie3Cfg_dpa_substate_change, extend(pcie_ep.cfg.dpa_substate_change)),
       tuple2(Pcie3Cfg_err_cor_out, extend(pcie_ep.cfg.err_cor_out)),
