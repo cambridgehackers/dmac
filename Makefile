@@ -61,6 +61,7 @@ connectalsrc:
 	cp ../connectal/lib/bsv/*.bsv src/connectal/bsv
 	cp ../connectal/generated/xilinx/*.bsv src/connectal/bsv
 	cp ../connectal/cpp/* src/connectal/cpp
+	cp ../connectal/doc/library/source/bsvsphinx.py doc/source
 	mkdir -p src/connectal/etc/udev/rules.d src/connectal/etc/modules-load.d
 	cp -r ../connectal/etc/udev/rules.d src/connectal/etc/udev/
 	cp -r ../connectal/etc/modules-load.d src/connectal/etc/
