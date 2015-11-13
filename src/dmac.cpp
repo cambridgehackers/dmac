@@ -2,6 +2,7 @@
 #include "dmac.h"
 #include "portal.h"
 #include <GeneratedTypes.h>
+#include <algorithm>
 #include "dmaManager.h"
 #include "DmaIndication.h"
 #include "DmaRequest.h"
@@ -120,4 +121,13 @@ int DmaChannel::write ( const uint32_t objId, const uint32_t base, const uint32_
     int v = dmaRequest->write(objId, base, bytes, tag);
     if (!singleThreadedAccess) pthread_mutex_unlock(&channel_lock);
     return v;
+}
+
+int DmaChannel::setBurstLen(int bytes)
+{
+  if (!singleThreadedAccess) pthread_mutex_lock(&channel_lock);
+  this->burstLenBytes = std::min<int>(1024, bytes);
+  dmaRequest->burstLen(this->burstLenBytes);
+  if (!singleThreadedAccess) pthread_mutex_unlock(&channel_lock);
+  return this->burstLenBytes;
 }

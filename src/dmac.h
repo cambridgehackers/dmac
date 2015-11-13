@@ -54,6 +54,7 @@ class DmaChannel {
   int channel;
   volatile int waitCount;
   bool singleThreadedAccess;
+  int burstLenBytes;
   friend class DmaIndication;
   friend class DmaController;
   static void *threadfn(void *c);
@@ -65,4 +66,6 @@ public:
     int read ( const uint32_t objId, const uint32_t base, const uint32_t bytes, const uint8_t tag );
     // issue a DMA writerequest
     int write ( const uint32_t objId, const uint32_t base, const uint32_t bytes, const uint8_t tag );
+    // change burstLenBytes
+    int setBurstLen(int burstLen);
 };
