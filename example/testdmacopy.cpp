@@ -74,14 +74,14 @@ public:
 	return totalBeats / (double)cycles;
     }
     void readDone ( uint32_t sglId, uint32_t base, const uint8_t tag, uint32_t cycles ) {
-	fprintf(stderr, "[%s:%d] sglId=%d base=%08x tag=%d cycles=%d read bandwidth %5.2f MB/s link utilization %5.2f%%\n",
-		__FUNCTION__, __LINE__, sglId, base, tag, cycles, 16*250*linkUtilization(cycles), 100.0*linkUtilization(cycles, 1));
+	fprintf(stderr, "[%s:%d] sglId=%d base=%08x tag=%d burstLenBytes=%d cycles=%d read bandwidth %5.2f MB/s link utilization %5.2f%%\n",
+		__FUNCTION__, __LINE__, sglId, base, tag, burstLenBytes, cycles, 16*250*linkUtilization(cycles), 100.0*linkUtilization(cycles, 1));
 	waitCount--;
 	fprintf(stderr, "[%s:%d] channel %d waiting for %d responses\n", __FUNCTION__, __LINE__, channelNumber, waitCount);
     }
     void writeDone ( uint32_t sglId, uint32_t base, uint8_t tag, uint32_t cycles ) {
-	fprintf(stderr, "[%s:%d] sglId=%d base=%08x tag=%d cycles=%d write bandwidth %5.2f MB/s link utilization %5.2f%%\n",
-		__FUNCTION__, __LINE__, sglId, base, tag, cycles, 16*250*linkUtilization(cycles), 100.0*linkUtilization(cycles, 1));
+	fprintf(stderr, "[%s:%d] sglId=%d base=%08x tag=%d burstLenBytes=%d cycles=%d write bandwidth %5.2f MB/s link utilization %5.2f%%\n",
+		__FUNCTION__, __LINE__, sglId, base, tag, burstLenBytes, cycles, 16*250*linkUtilization(cycles), 100.0*linkUtilization(cycles, 1));
 	waitCount--;
 	fprintf(stderr, "[%s:%d] channel %d waiting for %d responses\n", __FUNCTION__, __LINE__, channelNumber, waitCount);
     }
@@ -100,6 +100,7 @@ void *ChannelWorker::threadfn(void *c)
 
 void ChannelWorker::run()
 {
+    channel->setBurstLen(burstLenBytes);
     for (int i = 0; i < numiters; i++) {
 	if (doRead) {
 	    fprintf(stderr, "[%s:%d] channel %d requesting dma read size=%d\n", __FUNCTION__, __LINE__, channelNumber, arraySize);
@@ -157,8 +158,8 @@ int main(int argc, char * const*argv)
 	    break;
 	case 'b':
 	    burstLenBytes = strtoul(optarg, 0, 0);
-	    if (burstLenBytes > 128)
-	      burstLenBytes = 128;
+	    if (burstLenBytes > 1024)
+	      burstLenBytes = 1024;
 	    break;
 	case 'i':
 	    numiters = strtoul(optarg, 0, 0);
