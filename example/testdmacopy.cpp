@@ -60,6 +60,7 @@ public:
 	fprintf(stderr, "[%s:%d] channel %d allocating buffers\n", __FUNCTION__, __LINE__, channelNumber);
 	for (int i = 0; i < 4; i++) {
 	    buffers[i] = new DmaBuffer(arraySize);
+	    memset(buffers[i]->buffer(), 0xba, arraySize);
 	}
     }
 
