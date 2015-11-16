@@ -1,6 +1,5 @@
-`define NumChannels 8
-`define DataBusWidth 128
-`define MainClockPeriod 4
+`define NumChannels 2
+`define BurstLenSize 11
 
 `define MemTagSize 6
 `define ConnectalVersion 15.10.3
@@ -10,10 +9,11 @@
 `define NumberOfUserTiles 1
 `define SlaveDataBusWidth 32
 `define SlaveControlAddrWidth 5
-`define BurstLenSize 10
 `define ExportType 
 `define USE_DUAL_CLOCK_FIFOF 
+`define DataBusWidth 128
 `define project_dir $(DTOP)
+`define MainClockPeriod 4
 `define DerivedClockPeriod 4.000000
 `define PcieClockPeriod 4
 `define XILINX 1
