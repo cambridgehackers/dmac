@@ -104,7 +104,7 @@ Running the Example
 To program the FPGA with the example design::
 
     cd dmac-15.11.2/example
-    fpajtag mkExample.bit
+    fpgajtag mkExample.bit
 
 The first time you use a system after the FPGA is programmed, you will have to reboot::
 
@@ -113,7 +113,7 @@ The first time you use a system after the FPGA is programmed, you will have to r
 Now run the example::
 
     cd dmac-15.11.2/example
-    LD_LIBRARY_PATH=/usr/local/lib NOPROGRAM=1 ./testdma-vc709
+    ./testdma-vc709
 
 
 ConnectalProjectConfig.bsv
