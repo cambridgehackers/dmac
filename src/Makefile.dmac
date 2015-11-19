@@ -2,13 +2,12 @@ PREFIX?=/usr/local
 DMAC_DIR?=$(PREFIX)/share/dmac
 
 ifneq ($(BOARD),bluesim)
-ipcore: ip/vc709/pcie3_7x_0/pcie3_7x_0.xci
+ipcore:
+	# rerun script in case parameters changed
+	vivado -mode batch -source $(DESTDIR)$(DMAC_DIR)/pciecore.tcl
 else
 ipcore:
 endif
-
-ip/vc709/pcie3_7x_0/pcie3_7x_0.xci:
-	vivado -mode batch -source $(DESTDIR)$(DMAC_DIR)/pciecore.tcl
 
 BSV_FLAGS_DMAC = -demote-errors G0066:G0045 -suppress-warnings G0046:G0020:S0015:S0080:S0039:T0127
 BSV_FLAGS_DMAC += -aggressive-conditions -p +:$(DMAC_DIR):$(DMAC_DIR)/generated:$(DMAC_DIR)/connectal/bsv -D ClockDefaultParam
