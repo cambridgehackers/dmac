@@ -103,7 +103,9 @@ DmaChannel::DmaChannel(int channel, DmaCallback *callbacks, bool singleThreadedA
 void DmaChannel::checkIndications()
 {
     if (!singleThreadedAccess) pthread_mutex_lock(&channel_lock);
-    poller->event();
+    void *rc = poller->pollFn(-1);
+    if ((long) rc >= 0)
+	poller->event();
     if (!singleThreadedAccess) pthread_mutex_unlock(&channel_lock);
 }
 
