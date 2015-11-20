@@ -37,12 +37,14 @@ int arraySize = 128*1024;
 int doWrite = 1;
 int doRead = 1;
 int numchannels = 1;
-int numiters = 1;
-int burstLenBytes = 128;
+int numIters = 10;
+int burstLenBytes = 256;
 
 class ChannelWorker : public DmaCallback {
     DmaChannel *channel;
     int channelNumber;
+    int numReads;
+    int numWrites;
     int waitCount;
     DmaBuffer *buffers[4];
     static void *threadfn(void *c);
@@ -53,7 +55,7 @@ class ChannelWorker : public DmaCallback {
 
 public:
     ChannelWorker(int channelNumber)
-    : channelNumber(channelNumber), waitCount(0) {
+    : channelNumber(channelNumber), numReads(0), numWrites(0), waitCount(0) {
 
 	channel = new DmaChannel(channelNumber, this);
 
@@ -76,14 +78,36 @@ public:
     void readDone ( uint32_t sglId, uint32_t base, const uint8_t tag, uint32_t cycles ) {
 	fprintf(stderr, "[%s:%d] sglId=%d base=%08x tag=%d burstLenBytes=%d cycles=%d read bandwidth %5.2f MB/s link utilization %5.2f%%\n",
 		__FUNCTION__, __LINE__, sglId, base, tag, burstLenBytes, cycles, 16*250*linkUtilization(cycles), 100.0*linkUtilization(cycles, 1));
-	waitCount--;
-	fprintf(stderr, "[%s:%d] channel %d waiting for %d responses\n", __FUNCTION__, __LINE__, channelNumber, waitCount);
+	if (numReads) {
+	    fprintf(stderr, "[%s:%d] channel %d requesting dma read size=%d\n", __FUNCTION__, __LINE__, channelNumber, arraySize);
+	    int tag = 0;
+	    channel->read(buffers[0]->reference(), 0, arraySize, tag);
+	    numReads--;
+	} else {
+	    waitCount--;
+	    fprintf(stderr, "[%s:%d] channel %d waiting for %d responses\n", __FUNCTION__, __LINE__, channelNumber, waitCount);
+	}
     }
     void writeDone ( uint32_t sglId, uint32_t base, uint8_t tag, uint32_t cycles ) {
 	fprintf(stderr, "[%s:%d] sglId=%d base=%08x tag=%d burstLenBytes=%d cycles=%d write bandwidth %5.2f MB/s link utilization %5.2f%%\n",
 		__FUNCTION__, __LINE__, sglId, base, tag, burstLenBytes, cycles, 16*250*linkUtilization(cycles), 100.0*linkUtilization(cycles, 1));
-	waitCount--;
-	fprintf(stderr, "[%s:%d] channel %d waiting for %d responses\n", __FUNCTION__, __LINE__, channelNumber, waitCount);
+	if (0)
+	for (int i = 0; i < 4; i++) {
+	  if (buffers[i]->reference() == sglId) {
+	    for (int j = 0; j < 8; j++) {
+	      fprintf(stderr, "%d: %016lx\n", j, *(uint64_t *)(buffers[i]->buffer() + j*8));
+	    }
+	  }
+	}
+	if (numWrites) {
+	    fprintf(stderr, "[%s:%d] channel %d requesting dma write size=%d\n", __FUNCTION__, __LINE__, channelNumber, arraySize);
+	    int tag = 1;
+	    channel->write(buffers[1]->reference(), 0, arraySize, tag);
+	    numWrites--;
+	} else {
+	    waitCount--;
+	    fprintf(stderr, "[%s:%d] channel %d waiting for %d responses\n", __FUNCTION__, __LINE__, channelNumber, waitCount);
+	}
     }
     static void runTest();
 };
@@ -101,24 +125,34 @@ void *ChannelWorker::threadfn(void *c)
 void ChannelWorker::run()
 {
     channel->setBurstLen(burstLenBytes);
-    for (int i = 0; i < numiters; i++) {
-	if (doRead) {
+    for (int i = 0; i < 2; i++) {
+	if (i == 0) {
+	    numReads = numIters;
+	    numWrites = 0;
+	} else {
+	    numReads = 0;
+	    numWrites = numIters;
+	}
+	if (numReads) {
 	    fprintf(stderr, "[%s:%d] channel %d requesting dma read size=%d\n", __FUNCTION__, __LINE__, channelNumber, arraySize);
 	    int tag = 0;
 	    channel->read(buffers[0]->reference(), 0, arraySize, tag);
 	    waitCount++;
+	    numReads--;
 	}
 
-	if (doWrite) {
+	if (numWrites) {
 	    fprintf(stderr, "[%s:%d] channel %d requesting dma write size=%d\n", __FUNCTION__, __LINE__, channelNumber, arraySize);
 	    int tag = 1;
 	    channel->write(buffers[1]->reference(), 0, arraySize, tag);
 	    waitCount++;
+	    numWrites--;
 	}
-    }
-    fprintf(stderr, "[%s:%d] channel %d waiting for responses\n", __FUNCTION__, __LINE__, channelNumber);
-    while (waitCount > 0) {
-      channel->checkIndications();
+	fprintf(stderr, "[%s:%d] channel %d waiting for responses\n", __FUNCTION__, __LINE__, channelNumber);
+	while (waitCount > 0) {
+	    channel->checkIndications();
+	}
+	waitCount = 0;
     }
 }
 
@@ -162,7 +196,7 @@ int main(int argc, char * const*argv)
 	      burstLenBytes = 1024;
 	    break;
 	case 'i':
-	    numiters = strtoul(optarg, 0, 0);
+	    numIters = strtoul(optarg, 0, 0);
 	    break;
 	case 's': {
 	    char *endptr = 0;
