@@ -94,7 +94,7 @@ void PortalPoller::addFd(int fd)
     struct pollfd *new_portal_fds = (struct pollfd *)malloc(numFds*sizeof(struct pollfd));
     if (portal_fds) {
 	memcpy((void *)new_portal_fds, (const void *)portal_fds, (numFds-1)*sizeof(struct pollfd));
-	free(portal_fds);
+	//free(portal_fds);
     }
     portal_fds = new_portal_fds;
     struct pollfd *pollfd = &portal_fds[numFds-1];
