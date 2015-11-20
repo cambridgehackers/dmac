@@ -51,10 +51,10 @@ bsim: obj-$(BOARD)/mkExample.ba
 endif
 
 testdma.o: testdma.cpp
-	g++ -O -I../src -c testdma.cpp
+	g++ -O -g -I../src -c testdma.cpp
 
 
 testdma-$(BOARD): testdma.o $(DMAC_DIR)/libdmac-$(BOARD).a
-	g++ -O -o testdma-$(BOARD) testdma.o -L$(DMAC_DIR) -ldmac-$(BOARD) -lpthread
+	g++ -O -g -o testdma-$(BOARD) testdma.o -L$(DMAC_DIR) -ldmac-$(BOARD) -lpthread
 
 include $(DMAC_DIR)/Makefile.dmac
