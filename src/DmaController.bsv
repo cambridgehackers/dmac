@@ -81,7 +81,7 @@ interface DmaController#(numeric type numChannels);
 endinterface
 
 typedef 15 NumOutstandingRequests;
-typedef TMul#(NumOutstandingRequests,TMul#(32,4)) BufferSizeBytes;
+typedef TMul#(NumOutstandingRequests,256) BufferSizeBytes;
 
 function Bit#(dsz) memdatafToData(MemDataF#(dsz) mdf); return mdf.data; endfunction
 
