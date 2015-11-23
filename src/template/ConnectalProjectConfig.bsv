@@ -1,5 +1,6 @@
 `define NumChannels 2
 `define BurstLenSize 11
+`define TRACE_PORTAL
 
 `define MemTagSize 6
 `define ConnectalVersion 15.10.3
