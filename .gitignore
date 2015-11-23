@@ -6,3 +6,15 @@
 *.bit
 usage_statistics_webtalk.*
 *.o
+*.mod.c
+*.a
+.tmp_versions
+.ko
+*.cmd
+*.ko
+*.order
+*.symvers
+*.pyc
+*.symvers
+vivado_pid*
+*.vcd
