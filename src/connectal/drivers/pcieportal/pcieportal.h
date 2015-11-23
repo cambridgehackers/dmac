@@ -62,6 +62,19 @@ typedef struct ChangeEntry {
   unsigned char src;
   unsigned int value : 24;
 } tChangeEntry;
+
+typedef struct tPcieMps {
+	unsigned short parent_vendor;
+	unsigned short parent_device;
+	int parent_is_root;
+	int parent_mpss;
+	int parent_mps;
+	int endpoint_mpss;
+	int endpoint_mps;
+	int parent_set_mps;
+	int endpoint_set_mps;
+} tPcieMps;
+
 /* IOCTL code definitions */
 
 #define BNOC_GET_TLP         _IOR(BNOC_IOC_MAGIC,7,tTlpData*)
@@ -71,6 +84,7 @@ typedef struct ChangeEntry {
 #define PCIE_DEREFERENCE     _IOR(BNOC_IOC_MAGIC,13,int)
 #define PCIE_SIGNATURE       _IOR(BNOC_IOC_MAGIC,14,PortalSignaturePcie)
 #define PCIE_CHANGE_ENTRY    _IOR(BNOC_IOC_MAGIC,15,tChangeEntry*)
+#define PCIE_SET_MPS         _IOR(BNOC_IOC_MAGIC,16,tPcieMps*)
 
 #ifdef __KERNEL__
 /*

@@ -26,6 +26,8 @@
 #include "MMUIndication.h"
 #include "MemServerRequest.h"
 #include "MemServerIndication.h"
+#include <sys/ioctl.h>
+#include "drivers/pcieportal/pcieportal.h"
 
 #define PLATFORM_TILE 0
 
@@ -112,6 +114,14 @@ void platformInitOnce(void)
     dma = new DmaManager(dmap);
     hostMemServerIndication = new MemServerIndication(hostMemServerRequest, PlatformIfcNames_MemServerIndicationH2S, PLATFORM_TILE);
     mmuIndication = new MMUIndication(dma, PlatformIfcNames_MMUIndicationH2S, PLATFORM_TILE);
+
+    tPcieMps mps;
+    int rc = ioctl(utility_portal->fpga_fd, PCIE_SET_MPS, (long)&mps);
+    fprintf(stderr, "pcie.parent %04x %04x pcie.parent_is_root=%d parent mpss=%d mps=%d rc=%d endpoint mpss=%d mps=%d rc=%d\n",
+	    mps.parent_vendor, mps.parent_device,
+	    mps.parent_is_root,
+	    mps.parent_mpss, mps.parent_mps, mps.parent_set_mps,
+	    mps.endpoint_mpss, mps.endpoint_mps, mps.endpoint_set_mps);
 
 #ifdef FPGA0_CLOCK_FREQ
     long req_freq = FPGA0_CLOCK_FREQ;
