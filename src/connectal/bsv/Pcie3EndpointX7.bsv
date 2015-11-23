@@ -221,9 +221,9 @@ module mkPcieEndpointX7(PcieEndpointX7#(PcieLanes));
 
    // FIFOS
    FIFOF#(AxiStCq) fAxiCq <- mkFIFOF(clocked_by pcie_ep.user_clk, reset_by user_reset_n);
-   FIFOF#(AxiStRc) fAxiRc <- mkSizedFIFOF(32, clocked_by pcie_ep.user_clk, reset_by user_reset_n);
+   FIFOF#(AxiStRc) fAxiRc <- mkSizedFIFOF(64, clocked_by pcie_ep.user_clk, reset_by user_reset_n);
 
-   FIFOF#(AxiStRq) fAxiRq <- mkSizedFIFOF(32, clocked_by pcie_ep.user_clk, reset_by user_reset_n);
+   FIFOF#(AxiStRq) fAxiRq <- mkSizedFIFOF(64, clocked_by pcie_ep.user_clk, reset_by user_reset_n);
    FIFOF#(AxiStCc) fAxiCc <- mkFIFOF(clocked_by pcie_ep.user_clk, reset_by user_reset_n);
 
    FIFOF#(TLPData#(16)) fcq <- mkFIFOF(clocked_by pcie_ep.user_clk, reset_by user_reset_n);
