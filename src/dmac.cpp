@@ -103,7 +103,13 @@ DmaChannel::DmaChannel(int channel, DmaCallback *callbacks, bool singleThreadedA
 void DmaChannel::checkIndications()
 {
     if (!singleThreadedAccess) pthread_mutex_lock(&channel_lock);
-    void *rc = poller->pollFn(-1);
+    void *rc = poller->pollFn(
+#ifdef BOARD_bluesim
+			      100
+#else
+-1
+#endif
+);
     if ((long) rc >= 0)
 	poller->event();
     if (!singleThreadedAccess) pthread_mutex_unlock(&channel_lock);
