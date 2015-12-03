@@ -1,0 +1,15 @@
+CONNECTALDIR?=../../connectal
+S2H_INTERFACES = DmaRequest:DmaController.request
+H2S_INTERFACES = DmaController:DmaIndication
+MEM_READ_INTERFACES = lDmaController.readClient
+MEM_WRITE_INTERFACES = lDmaController.writeClient
+
+BSVFILES = DmaController.bsv
+CPPFILES=  testmemcpy.cpp
+
+generate:
+	grep generate $(CONNECTALDIR)/Makefile.connectal
+	BOARD=vc709 PROJECTDIR=vc709 $(MAKE) -f Makefile.generate --no-print-directory gentarget
+	make -C vc709
+
+include $(CONNECTALDIR)/Makefile.connectal
