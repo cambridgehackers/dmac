@@ -45,8 +45,8 @@ module mkConnectalTop(ConnectalTop);
    interface DmaTopPins pins;
       interface clock = defaultClock;
       interface reset = defaultReset;
-      interface readData = dmaController.readData;
-      interface writeData = dmaController.writeData;
+      interface toFpga = dmaController.toFpga;
+      interface fromFpga = dmaController.fromFpga;
    endinterface
 
 endmodule : mkConnectalTop

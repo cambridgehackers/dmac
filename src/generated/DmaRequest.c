@@ -10,37 +10,37 @@ int DmaRequest_burstLen ( struct PortalInternal *p, const uint16_t burstLenBytes
     return 0;
 };
 
-int DmaRequest_read ( struct PortalInternal *p, const uint32_t objId, const uint32_t base, const uint32_t bytes, const uint8_t tag )
+int DmaRequest_transferToFpga ( struct PortalInternal *p, const uint32_t objId, const uint32_t base, const uint32_t bytes, const uint8_t tag )
 {
-    volatile unsigned int* temp_working_addr_start = p->item->mapchannelReq(p, CHAN_NUM_DmaRequest_read, 5);
+    volatile unsigned int* temp_working_addr_start = p->item->mapchannelReq(p, CHAN_NUM_DmaRequest_transferToFpga, 5);
     volatile unsigned int* temp_working_addr = temp_working_addr_start;
-    if (p->item->busywait(p, CHAN_NUM_DmaRequest_read, "DmaRequest_read")) return 1;
+    if (p->item->busywait(p, CHAN_NUM_DmaRequest_transferToFpga, "DmaRequest_transferToFpga")) return 1;
     p->item->write(p, &temp_working_addr, (objId>>24));
     p->item->write(p, &temp_working_addr, (base>>24)|(((unsigned long)objId)<<8));
     p->item->write(p, &temp_working_addr, (bytes>>24)|(((unsigned long)base)<<8));
     p->item->write(p, &temp_working_addr, tag|(((unsigned long)bytes)<<8));
-    p->item->send(p, temp_working_addr_start, (CHAN_NUM_DmaRequest_read << 16) | 5, -1);
+    p->item->send(p, temp_working_addr_start, (CHAN_NUM_DmaRequest_transferToFpga << 16) | 5, -1);
     return 0;
 };
 
-int DmaRequest_write ( struct PortalInternal *p, const uint32_t objId, const uint32_t base, const uint32_t bytes, const uint8_t tag )
+int DmaRequest_transferFromFpga ( struct PortalInternal *p, const uint32_t objId, const uint32_t base, const uint32_t bytes, const uint8_t tag )
 {
-    volatile unsigned int* temp_working_addr_start = p->item->mapchannelReq(p, CHAN_NUM_DmaRequest_write, 5);
+    volatile unsigned int* temp_working_addr_start = p->item->mapchannelReq(p, CHAN_NUM_DmaRequest_transferFromFpga, 5);
     volatile unsigned int* temp_working_addr = temp_working_addr_start;
-    if (p->item->busywait(p, CHAN_NUM_DmaRequest_write, "DmaRequest_write")) return 1;
+    if (p->item->busywait(p, CHAN_NUM_DmaRequest_transferFromFpga, "DmaRequest_transferFromFpga")) return 1;
     p->item->write(p, &temp_working_addr, (objId>>24));
     p->item->write(p, &temp_working_addr, (base>>24)|(((unsigned long)objId)<<8));
     p->item->write(p, &temp_working_addr, (bytes>>24)|(((unsigned long)base)<<8));
     p->item->write(p, &temp_working_addr, tag|(((unsigned long)bytes)<<8));
-    p->item->send(p, temp_working_addr_start, (CHAN_NUM_DmaRequest_write << 16) | 5, -1);
+    p->item->send(p, temp_working_addr_start, (CHAN_NUM_DmaRequest_transferFromFpga << 16) | 5, -1);
     return 0;
 };
 
 DmaRequestCb DmaRequestProxyReq = {
     portal_disconnect,
     DmaRequest_burstLen,
-    DmaRequest_read,
-    DmaRequest_write,
+    DmaRequest_transferToFpga,
+    DmaRequest_transferFromFpga,
 };
 int DmaRequest_handleMessage(struct PortalInternal *p, unsigned int channel, int messageFd)
 {
@@ -56,35 +56,35 @@ int DmaRequest_handleMessage(struct PortalInternal *p, unsigned int channel, int
         tmp = p->item->read(p, &temp_working_addr);
         tempdata.burstLen.burstLenBytes = (uint16_t)(((tmp)&0xfffful));((DmaRequestCb *)p->cb)->burstLen(p, tempdata.burstLen.burstLenBytes);
       } break;
-    case CHAN_NUM_DmaRequest_read: {
+    case CHAN_NUM_DmaRequest_transferToFpga: {
         
         p->item->recv(p, temp_working_addr, 4, &tmpfd);
         tmp = p->item->read(p, &temp_working_addr);
-        tempdata.read.objId = (uint32_t)(((uint32_t)(((tmp)&0xfful))<<24));
+        tempdata.transferToFpga.objId = (uint32_t)(((uint32_t)(((tmp)&0xfful))<<24));
         tmp = p->item->read(p, &temp_working_addr);
-        tempdata.read.base = (uint32_t)(((uint32_t)(((tmp)&0xfful))<<24));
-        tempdata.read.objId |= (uint32_t)(((tmp>>8)&0xfffffful));
+        tempdata.transferToFpga.base = (uint32_t)(((uint32_t)(((tmp)&0xfful))<<24));
+        tempdata.transferToFpga.objId |= (uint32_t)(((tmp>>8)&0xfffffful));
         tmp = p->item->read(p, &temp_working_addr);
-        tempdata.read.bytes = (uint32_t)(((uint32_t)(((tmp)&0xfful))<<24));
-        tempdata.read.base |= (uint32_t)(((tmp>>8)&0xfffffful));
+        tempdata.transferToFpga.bytes = (uint32_t)(((uint32_t)(((tmp)&0xfful))<<24));
+        tempdata.transferToFpga.base |= (uint32_t)(((tmp>>8)&0xfffffful));
         tmp = p->item->read(p, &temp_working_addr);
-        tempdata.read.tag = (uint8_t)(((tmp)&0xfful));
-        tempdata.read.bytes |= (uint32_t)(((tmp>>8)&0xfffffful));((DmaRequestCb *)p->cb)->read(p, tempdata.read.objId, tempdata.read.base, tempdata.read.bytes, tempdata.read.tag);
+        tempdata.transferToFpga.tag = (uint8_t)(((tmp)&0xfful));
+        tempdata.transferToFpga.bytes |= (uint32_t)(((tmp>>8)&0xfffffful));((DmaRequestCb *)p->cb)->transferToFpga(p, tempdata.transferToFpga.objId, tempdata.transferToFpga.base, tempdata.transferToFpga.bytes, tempdata.transferToFpga.tag);
       } break;
-    case CHAN_NUM_DmaRequest_write: {
+    case CHAN_NUM_DmaRequest_transferFromFpga: {
         
         p->item->recv(p, temp_working_addr, 4, &tmpfd);
         tmp = p->item->read(p, &temp_working_addr);
-        tempdata.write.objId = (uint32_t)(((uint32_t)(((tmp)&0xfful))<<24));
+        tempdata.transferFromFpga.objId = (uint32_t)(((uint32_t)(((tmp)&0xfful))<<24));
         tmp = p->item->read(p, &temp_working_addr);
-        tempdata.write.base = (uint32_t)(((uint32_t)(((tmp)&0xfful))<<24));
-        tempdata.write.objId |= (uint32_t)(((tmp>>8)&0xfffffful));
+        tempdata.transferFromFpga.base = (uint32_t)(((uint32_t)(((tmp)&0xfful))<<24));
+        tempdata.transferFromFpga.objId |= (uint32_t)(((tmp>>8)&0xfffffful));
         tmp = p->item->read(p, &temp_working_addr);
-        tempdata.write.bytes = (uint32_t)(((uint32_t)(((tmp)&0xfful))<<24));
-        tempdata.write.base |= (uint32_t)(((tmp>>8)&0xfffffful));
+        tempdata.transferFromFpga.bytes = (uint32_t)(((uint32_t)(((tmp)&0xfful))<<24));
+        tempdata.transferFromFpga.base |= (uint32_t)(((tmp>>8)&0xfffffful));
         tmp = p->item->read(p, &temp_working_addr);
-        tempdata.write.tag = (uint8_t)(((tmp)&0xfful));
-        tempdata.write.bytes |= (uint32_t)(((tmp>>8)&0xfffffful));((DmaRequestCb *)p->cb)->write(p, tempdata.write.objId, tempdata.write.base, tempdata.write.bytes, tempdata.write.tag);
+        tempdata.transferFromFpga.tag = (uint8_t)(((tmp)&0xfful));
+        tempdata.transferFromFpga.bytes |= (uint32_t)(((tmp>>8)&0xfffffful));((DmaRequestCb *)p->cb)->transferFromFpga(p, tempdata.transferFromFpga.objId, tempdata.transferFromFpga.base, tempdata.transferFromFpga.bytes, tempdata.transferFromFpga.tag);
       } break;
     default:
         PORTAL_PRINTF("DmaRequest_handleMessage: unknown channel 0x%x\n", channel);

@@ -26,6 +26,7 @@ import FIFO::*;
 import FIFOF::*;
 import GetPut::*;
 import Connectable::*;
+import Probe::*;
 import ConnectalConfig::*;
 import Pipe::*;
 import MemTypes::*;
@@ -41,19 +42,19 @@ typedef struct {
     Bit#(32) base;
     Bit#(8) tag;
     Bit#(32) cycles;
-} ReadDone_Message deriving (Bits);
+} TransferToFpgaDone_Message deriving (Bits);
 
 typedef struct {
     Bit#(32) objId;
     Bit#(32) base;
     Bit#(8) tag;
     Bit#(32) cycles;
-} WriteDone_Message deriving (Bits);
+} TransferFromFpgaDone_Message deriving (Bits);
 
 // exposed wrapper portal interface
 interface DmaIndicationInputPipes;
-    interface PipeOut#(ReadDone_Message) readDone_PipeOut;
-    interface PipeOut#(WriteDone_Message) writeDone_PipeOut;
+    interface PipeOut#(TransferToFpgaDone_Message) transferToFpgaDone_PipeOut;
+    interface PipeOut#(TransferFromFpgaDone_Message) transferFromFpgaDone_PipeOut;
 
 endinterface
 interface DmaIndicationInput;
@@ -71,14 +72,14 @@ endinterface
 instance Connectable#(DmaIndicationInputPipes,DmaIndication);
    module mkConnection#(DmaIndicationInputPipes pipes, DmaIndication ifc)(Empty);
 
-    rule handle_readDone_request;
-        let request <- toGet(pipes.readDone_PipeOut).get();
-        ifc.readDone(request.objId, request.base, request.tag, request.cycles);
+    rule handle_transferToFpgaDone_request;
+        let request <- toGet(pipes.transferToFpgaDone_PipeOut).get();
+        ifc.transferToFpgaDone(request.objId, request.base, request.tag, request.cycles);
     endrule
 
-    rule handle_writeDone_request;
-        let request <- toGet(pipes.writeDone_PipeOut).get();
-        ifc.writeDone(request.objId, request.base, request.tag, request.cycles);
+    rule handle_transferFromFpgaDone_request;
+        let request <- toGet(pipes.transferFromFpgaDone_PipeOut).get();
+        ifc.transferFromFpgaDone(request.objId, request.base, request.tag, request.cycles);
     endrule
 
    endmodule
@@ -89,18 +90,18 @@ endinstance
 module mkDmaIndicationInput(DmaIndicationInput);
     Vector#(2, PipeIn#(Bit#(SlaveDataBusWidth))) requestPipeIn;
 
-    AdapterFromBus#(SlaveDataBusWidth,ReadDone_Message) readDone_requestAdapter <- mkAdapterFromBus();
-    requestPipeIn[0] = readDone_requestAdapter.in;
+    AdapterFromBus#(SlaveDataBusWidth,TransferToFpgaDone_Message) transferToFpgaDone_requestAdapter <- mkAdapterFromBus();
+    requestPipeIn[0] = transferToFpgaDone_requestAdapter.in;
 
-    AdapterFromBus#(SlaveDataBusWidth,WriteDone_Message) writeDone_requestAdapter <- mkAdapterFromBus();
-    requestPipeIn[1] = writeDone_requestAdapter.in;
+    AdapterFromBus#(SlaveDataBusWidth,TransferFromFpgaDone_Message) transferFromFpgaDone_requestAdapter <- mkAdapterFromBus();
+    requestPipeIn[1] = transferFromFpgaDone_requestAdapter.in;
 
     interface PipePortal portalIfc;
         interface PortalSize messageSize;
         method Bit#(16) size(Bit#(16) methodNumber);
             case (methodNumber)
-            0: return fromInteger(valueOf(SizeOf#(ReadDone_Message)));
-            1: return fromInteger(valueOf(SizeOf#(WriteDone_Message)));
+            0: return fromInteger(valueOf(SizeOf#(TransferToFpgaDone_Message)));
+            1: return fromInteger(valueOf(SizeOf#(TransferFromFpgaDone_Message)));
             endcase
         endmethod
         endinterface
@@ -116,8 +117,8 @@ module mkDmaIndicationInput(DmaIndicationInput);
         endinterface
     endinterface
     interface DmaIndicationInputPipes pipes;
-        interface readDone_PipeOut = readDone_requestAdapter.out;
-        interface writeDone_PipeOut = writeDone_requestAdapter.out;
+        interface transferToFpgaDone_PipeOut = transferToFpgaDone_requestAdapter.out;
+        interface transferFromFpgaDone_PipeOut = transferFromFpgaDone_requestAdapter.out;
     endinterface
 endmodule
 
@@ -166,8 +167,8 @@ interface DmaIndicationProxy;
 endinterface
 
 interface DmaIndicationOutputPipeMethods;
-    interface PipeIn#(ReadDone_Message) readDone;
-    interface PipeIn#(WriteDone_Message) writeDone;
+    interface PipeIn#(TransferToFpgaDone_Message) transferToFpgaDone;
+    interface PipeIn#(TransferFromFpgaDone_Message) transferFromFpgaDone;
 
 endinterface
 
@@ -178,8 +179,8 @@ endinterface
 
 function Bit#(16) getDmaIndicationMessageSize(Bit#(16) methodNumber);
     case (methodNumber)
-            0: return fromInteger(valueOf(SizeOf#(ReadDone_Message)));
-            1: return fromInteger(valueOf(SizeOf#(WriteDone_Message)));
+            0: return fromInteger(valueOf(SizeOf#(TransferToFpgaDone_Message)));
+            1: return fromInteger(valueOf(SizeOf#(TransferFromFpgaDone_Message)));
     endcase
 endfunction
 
@@ -187,16 +188,16 @@ endfunction
 module mkDmaIndicationOutputPipes(DmaIndicationOutputPipes);
     Vector#(2, PipeOut#(Bit#(SlaveDataBusWidth))) indicationPipes;
 
-    AdapterToBus#(SlaveDataBusWidth,ReadDone_Message) readDone_responseAdapter <- mkAdapterToBus();
-    indicationPipes[0] = readDone_responseAdapter.out;
+    AdapterToBus#(SlaveDataBusWidth,TransferToFpgaDone_Message) transferToFpgaDone_responseAdapter <- mkAdapterToBus();
+    indicationPipes[0] = transferToFpgaDone_responseAdapter.out;
 
-    AdapterToBus#(SlaveDataBusWidth,WriteDone_Message) writeDone_responseAdapter <- mkAdapterToBus();
-    indicationPipes[1] = writeDone_responseAdapter.out;
+    AdapterToBus#(SlaveDataBusWidth,TransferFromFpgaDone_Message) transferFromFpgaDone_responseAdapter <- mkAdapterToBus();
+    indicationPipes[1] = transferFromFpgaDone_responseAdapter.out;
 
     PortalInterrupt#(SlaveDataBusWidth) intrInst <- mkPortalInterrupt(indicationPipes);
     interface DmaIndicationOutputPipeMethods methods;
-    interface readDone = readDone_responseAdapter.in;
-    interface writeDone = writeDone_responseAdapter.in;
+    interface transferToFpgaDone = transferToFpgaDone_responseAdapter.in;
+    interface transferFromFpgaDone = transferFromFpgaDone_responseAdapter.in;
 
     endinterface
     interface PipePortal portalIfc;
@@ -214,13 +215,13 @@ module mkDmaIndicationOutput(DmaIndicationOutput);
     let indicationPipes <- mkDmaIndicationOutputPipes;
     interface DmaController::DmaIndication ifc;
 
-    method Action readDone(Bit#(32) objId, Bit#(32) base, Bit#(8) tag, Bit#(32) cycles);
-        indicationPipes.methods.readDone.enq(ReadDone_Message {objId: objId, base: base, tag: tag, cycles: cycles});
-        //$display("indicationMethod 'readDone' invoked");
+    method Action transferToFpgaDone(Bit#(32) objId, Bit#(32) base, Bit#(8) tag, Bit#(32) cycles);
+        indicationPipes.methods.transferToFpgaDone.enq(TransferToFpgaDone_Message {objId: objId, base: base, tag: tag, cycles: cycles});
+        //$display("indicationMethod 'transferToFpgaDone' invoked");
     endmethod
-    method Action writeDone(Bit#(32) objId, Bit#(32) base, Bit#(8) tag, Bit#(32) cycles);
-        indicationPipes.methods.writeDone.enq(WriteDone_Message {objId: objId, base: base, tag: tag, cycles: cycles});
-        //$display("indicationMethod 'writeDone' invoked");
+    method Action transferFromFpgaDone(Bit#(32) objId, Bit#(32) base, Bit#(8) tag, Bit#(32) cycles);
+        indicationPipes.methods.transferFromFpgaDone.enq(TransferFromFpgaDone_Message {objId: objId, base: base, tag: tag, cycles: cycles});
+        //$display("indicationMethod 'transferFromFpgaDone' invoked");
     endmethod
     endinterface
     interface PipePortal portalIfc = indicationPipes.portalIfc;
@@ -233,8 +234,8 @@ endinstance
 
 
 interface DmaIndicationInverse;
-    method ActionValue#(ReadDone_Message) readDone;
-    method ActionValue#(WriteDone_Message) writeDone;
+    method ActionValue#(TransferToFpgaDone_Message) transferToFpgaDone;
+    method ActionValue#(TransferFromFpgaDone_Message) transferFromFpgaDone;
 
 endinterface
 
@@ -245,61 +246,61 @@ endinterface
 
 instance Connectable#(DmaIndicationInverse, DmaIndicationOutputPipeMethods);
    module mkConnection#(DmaIndicationInverse in, DmaIndicationOutputPipeMethods out)(Empty);
-    mkConnection(in.readDone, out.readDone);
-    mkConnection(in.writeDone, out.writeDone);
+    mkConnection(in.transferToFpgaDone, out.transferToFpgaDone);
+    mkConnection(in.transferFromFpgaDone, out.transferFromFpgaDone);
 
    endmodule
 endinstance
 
 (* synthesize *)
 module mkDmaIndicationInverter(DmaIndicationInverter);
-    FIFOF#(ReadDone_Message) fifo_readDone <- mkFIFOF();
-    FIFOF#(WriteDone_Message) fifo_writeDone <- mkFIFOF();
+    FIFOF#(TransferToFpgaDone_Message) fifo_transferToFpgaDone <- mkFIFOF();
+    FIFOF#(TransferFromFpgaDone_Message) fifo_transferFromFpgaDone <- mkFIFOF();
 
     interface DmaController::DmaIndication ifc;
 
-    method Action readDone(Bit#(32) objId, Bit#(32) base, Bit#(8) tag, Bit#(32) cycles);
-        fifo_readDone.enq(ReadDone_Message {objId: objId, base: base, tag: tag, cycles: cycles});
+    method Action transferToFpgaDone(Bit#(32) objId, Bit#(32) base, Bit#(8) tag, Bit#(32) cycles);
+        fifo_transferToFpgaDone.enq(TransferToFpgaDone_Message {objId: objId, base: base, tag: tag, cycles: cycles});
     endmethod
-    method Action writeDone(Bit#(32) objId, Bit#(32) base, Bit#(8) tag, Bit#(32) cycles);
-        fifo_writeDone.enq(WriteDone_Message {objId: objId, base: base, tag: tag, cycles: cycles});
+    method Action transferFromFpgaDone(Bit#(32) objId, Bit#(32) base, Bit#(8) tag, Bit#(32) cycles);
+        fifo_transferFromFpgaDone.enq(TransferFromFpgaDone_Message {objId: objId, base: base, tag: tag, cycles: cycles});
     endmethod
     endinterface
     interface DmaIndicationInverse inverseIfc;
 
-    method ActionValue#(ReadDone_Message) readDone;
-        fifo_readDone.deq;
-        return fifo_readDone.first;
+    method ActionValue#(TransferToFpgaDone_Message) transferToFpgaDone;
+        fifo_transferToFpgaDone.deq;
+        return fifo_transferToFpgaDone.first;
     endmethod
-    method ActionValue#(WriteDone_Message) writeDone;
-        fifo_writeDone.deq;
-        return fifo_writeDone.first;
+    method ActionValue#(TransferFromFpgaDone_Message) transferFromFpgaDone;
+        fifo_transferFromFpgaDone.deq;
+        return fifo_transferFromFpgaDone.first;
     endmethod
     endinterface
 endmodule
 
 (* synthesize *)
 module mkDmaIndicationInverterV(DmaIndicationInverter);
-    PutInverter#(ReadDone_Message) inv_readDone <- mkPutInverter();
-    PutInverter#(WriteDone_Message) inv_writeDone <- mkPutInverter();
+    PutInverter#(TransferToFpgaDone_Message) inv_transferToFpgaDone <- mkPutInverter();
+    PutInverter#(TransferFromFpgaDone_Message) inv_transferFromFpgaDone <- mkPutInverter();
 
     interface DmaController::DmaIndication ifc;
 
-    method Action readDone(Bit#(32) objId, Bit#(32) base, Bit#(8) tag, Bit#(32) cycles);
-        inv_readDone.mod.put(ReadDone_Message {objId: objId, base: base, tag: tag, cycles: cycles});
+    method Action transferToFpgaDone(Bit#(32) objId, Bit#(32) base, Bit#(8) tag, Bit#(32) cycles);
+        inv_transferToFpgaDone.mod.put(TransferToFpgaDone_Message {objId: objId, base: base, tag: tag, cycles: cycles});
     endmethod
-    method Action writeDone(Bit#(32) objId, Bit#(32) base, Bit#(8) tag, Bit#(32) cycles);
-        inv_writeDone.mod.put(WriteDone_Message {objId: objId, base: base, tag: tag, cycles: cycles});
+    method Action transferFromFpgaDone(Bit#(32) objId, Bit#(32) base, Bit#(8) tag, Bit#(32) cycles);
+        inv_transferFromFpgaDone.mod.put(TransferFromFpgaDone_Message {objId: objId, base: base, tag: tag, cycles: cycles});
     endmethod
     endinterface
     interface DmaIndicationInverse inverseIfc;
 
-    method ActionValue#(ReadDone_Message) readDone;
-        let v <- inv_readDone.inverse.get;
+    method ActionValue#(TransferToFpgaDone_Message) transferToFpgaDone;
+        let v <- inv_transferToFpgaDone.inverse.get;
         return v;
     endmethod
-    method ActionValue#(WriteDone_Message) writeDone;
-        let v <- inv_writeDone.inverse.get;
+    method ActionValue#(TransferFromFpgaDone_Message) transferFromFpgaDone;
+        let v <- inv_transferFromFpgaDone.inverse.get;
         return v;
     endmethod
     endinterface

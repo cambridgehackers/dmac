@@ -132,19 +132,19 @@ int DmaRequestburstLen_cb (  struct PortalInternal *p, const uint16_t burstLenBy
     (static_cast<DmaRequestWrapper *>(p->parent))->burstLen ( burstLenBytes);
     return 0;
 };
-int DmaRequestread_cb (  struct PortalInternal *p, const uint32_t objId, const uint32_t base, const uint32_t bytes, const uint8_t tag ) {
-    (static_cast<DmaRequestWrapper *>(p->parent))->read ( objId, base, bytes, tag);
+int DmaRequesttransferToFpga_cb (  struct PortalInternal *p, const uint32_t objId, const uint32_t base, const uint32_t bytes, const uint8_t tag ) {
+    (static_cast<DmaRequestWrapper *>(p->parent))->transferToFpga ( objId, base, bytes, tag);
     return 0;
 };
-int DmaRequestwrite_cb (  struct PortalInternal *p, const uint32_t objId, const uint32_t base, const uint32_t bytes, const uint8_t tag ) {
-    (static_cast<DmaRequestWrapper *>(p->parent))->write ( objId, base, bytes, tag);
+int DmaRequesttransferFromFpga_cb (  struct PortalInternal *p, const uint32_t objId, const uint32_t base, const uint32_t bytes, const uint8_t tag ) {
+    (static_cast<DmaRequestWrapper *>(p->parent))->transferFromFpga ( objId, base, bytes, tag);
     return 0;
 };
 DmaRequestCb DmaRequest_cbTable = {
     DmaRequestdisconnect_cb,
     DmaRequestburstLen_cb,
-    DmaRequestread_cb,
-    DmaRequestwrite_cb,
+    DmaRequesttransferToFpga_cb,
+    DmaRequesttransferFromFpga_cb,
 };
 
 /************** Start of DmaIndicationWrapper CPP ***********/
@@ -153,17 +153,17 @@ int DmaIndicationdisconnect_cb (struct PortalInternal *p) {
     (static_cast<DmaIndicationWrapper *>(p->parent))->disconnect();
     return 0;
 };
-int DmaIndicationreadDone_cb (  struct PortalInternal *p, const uint32_t objId, const uint32_t base, const uint8_t tag, const uint32_t cycles ) {
-    (static_cast<DmaIndicationWrapper *>(p->parent))->readDone ( objId, base, tag, cycles);
+int DmaIndicationtransferToFpgaDone_cb (  struct PortalInternal *p, const uint32_t objId, const uint32_t base, const uint8_t tag, const uint32_t cycles ) {
+    (static_cast<DmaIndicationWrapper *>(p->parent))->transferToFpgaDone ( objId, base, tag, cycles);
     return 0;
 };
-int DmaIndicationwriteDone_cb (  struct PortalInternal *p, const uint32_t objId, const uint32_t base, const uint8_t tag, const uint32_t cycles ) {
-    (static_cast<DmaIndicationWrapper *>(p->parent))->writeDone ( objId, base, tag, cycles);
+int DmaIndicationtransferFromFpgaDone_cb (  struct PortalInternal *p, const uint32_t objId, const uint32_t base, const uint8_t tag, const uint32_t cycles ) {
+    (static_cast<DmaIndicationWrapper *>(p->parent))->transferFromFpgaDone ( objId, base, tag, cycles);
     return 0;
 };
 DmaIndicationCb DmaIndication_cbTable = {
     DmaIndicationdisconnect_cb,
-    DmaIndicationreadDone_cb,
-    DmaIndicationwriteDone_cb,
+    DmaIndicationtransferToFpgaDone_cb,
+    DmaIndicationtransferFromFpgaDone_cb,
 };
 #endif //NO_CPP_PORTAL_CODE

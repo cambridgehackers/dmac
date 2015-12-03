@@ -1,45 +1,45 @@
 #include "GeneratedTypes.h"
 
 static ConnectalMethodJsonInfo DmaIndicationInfo[] = {
-    {"readDone", ((ConnectalParamJsonInfo[]){
-        {"objId", Connectaloffsetof(DmaIndication_readDoneData,objId), ITYPE_uint32_t},
-        {"base", Connectaloffsetof(DmaIndication_readDoneData,base), ITYPE_uint32_t},
-        {"tag", Connectaloffsetof(DmaIndication_readDoneData,tag), ITYPE_other},
-        {"cycles", Connectaloffsetof(DmaIndication_readDoneData,cycles), ITYPE_uint32_t},
-        {NULL, CHAN_NUM_DmaIndication_readDone}}) },
-    {"writeDone", ((ConnectalParamJsonInfo[]){
-        {"objId", Connectaloffsetof(DmaIndication_writeDoneData,objId), ITYPE_uint32_t},
-        {"base", Connectaloffsetof(DmaIndication_writeDoneData,base), ITYPE_uint32_t},
-        {"tag", Connectaloffsetof(DmaIndication_writeDoneData,tag), ITYPE_other},
-        {"cycles", Connectaloffsetof(DmaIndication_writeDoneData,cycles), ITYPE_uint32_t},
-        {NULL, CHAN_NUM_DmaIndication_writeDone}}) },{}};
+    {"transferToFpgaDone", ((ConnectalParamJsonInfo[]){
+        {"objId", Connectaloffsetof(DmaIndication_transferToFpgaDoneData,objId), ITYPE_uint32_t},
+        {"base", Connectaloffsetof(DmaIndication_transferToFpgaDoneData,base), ITYPE_uint32_t},
+        {"tag", Connectaloffsetof(DmaIndication_transferToFpgaDoneData,tag), ITYPE_other},
+        {"cycles", Connectaloffsetof(DmaIndication_transferToFpgaDoneData,cycles), ITYPE_uint32_t},
+        {NULL, CHAN_NUM_DmaIndication_transferToFpgaDone}}) },
+    {"transferFromFpgaDone", ((ConnectalParamJsonInfo[]){
+        {"objId", Connectaloffsetof(DmaIndication_transferFromFpgaDoneData,objId), ITYPE_uint32_t},
+        {"base", Connectaloffsetof(DmaIndication_transferFromFpgaDoneData,base), ITYPE_uint32_t},
+        {"tag", Connectaloffsetof(DmaIndication_transferFromFpgaDoneData,tag), ITYPE_other},
+        {"cycles", Connectaloffsetof(DmaIndication_transferFromFpgaDoneData,cycles), ITYPE_uint32_t},
+        {NULL, CHAN_NUM_DmaIndication_transferFromFpgaDone}}) },{}};
 
-int DmaIndicationJson_readDone ( struct PortalInternal *p, const uint32_t objId, const uint32_t base, const uint8_t tag, const uint32_t cycles )
+int DmaIndicationJson_transferToFpgaDone ( struct PortalInternal *p, const uint32_t objId, const uint32_t base, const uint8_t tag, const uint32_t cycles )
 {
-    DmaIndication_readDoneData tempdata;
+    DmaIndication_transferToFpgaDoneData tempdata;
     tempdata.objId = objId;
     tempdata.base = base;
     memcpy(&tempdata.tag, &tag, sizeof(tempdata.tag));
     tempdata.cycles = cycles;
-    connectalJsonEncode(p, &tempdata, &DmaIndicationInfo[CHAN_NUM_DmaIndication_readDone]);
+    connectalJsonEncode(p, &tempdata, &DmaIndicationInfo[CHAN_NUM_DmaIndication_transferToFpgaDone]);
     return 0;
 };
 
-int DmaIndicationJson_writeDone ( struct PortalInternal *p, const uint32_t objId, const uint32_t base, const uint8_t tag, const uint32_t cycles )
+int DmaIndicationJson_transferFromFpgaDone ( struct PortalInternal *p, const uint32_t objId, const uint32_t base, const uint8_t tag, const uint32_t cycles )
 {
-    DmaIndication_writeDoneData tempdata;
+    DmaIndication_transferFromFpgaDoneData tempdata;
     tempdata.objId = objId;
     tempdata.base = base;
     memcpy(&tempdata.tag, &tag, sizeof(tempdata.tag));
     tempdata.cycles = cycles;
-    connectalJsonEncode(p, &tempdata, &DmaIndicationInfo[CHAN_NUM_DmaIndication_writeDone]);
+    connectalJsonEncode(p, &tempdata, &DmaIndicationInfo[CHAN_NUM_DmaIndication_transferFromFpgaDone]);
     return 0;
 };
 
 DmaIndicationCb DmaIndicationJsonProxyReq = {
     portal_disconnect,
-    DmaIndicationJson_readDone,
-    DmaIndicationJson_writeDone,
+    DmaIndicationJson_transferToFpgaDone,
+    DmaIndicationJson_transferFromFpgaDone,
 };
 int DmaIndicationJson_handleMessage(struct PortalInternal *p, unsigned int channel, int messageFd)
 {
@@ -49,11 +49,11 @@ int DmaIndicationJson_handleMessage(struct PortalInternal *p, unsigned int chann
     DmaIndicationData tempdata __attribute__ ((unused));
     channel = connnectalJsonDecode(p, channel, &tempdata, DmaIndicationInfo);
     switch (channel) {
-    case CHAN_NUM_DmaIndication_readDone: {
-        ((DmaIndicationCb *)p->cb)->readDone(p, tempdata.readDone.objId, tempdata.readDone.base, tempdata.readDone.tag, tempdata.readDone.cycles);
+    case CHAN_NUM_DmaIndication_transferToFpgaDone: {
+        ((DmaIndicationCb *)p->cb)->transferToFpgaDone(p, tempdata.transferToFpgaDone.objId, tempdata.transferToFpgaDone.base, tempdata.transferToFpgaDone.tag, tempdata.transferToFpgaDone.cycles);
       } break;
-    case CHAN_NUM_DmaIndication_writeDone: {
-        ((DmaIndicationCb *)p->cb)->writeDone(p, tempdata.writeDone.objId, tempdata.writeDone.base, tempdata.writeDone.tag, tempdata.writeDone.cycles);
+    case CHAN_NUM_DmaIndication_transferFromFpgaDone: {
+        ((DmaIndicationCb *)p->cb)->transferFromFpgaDone(p, tempdata.transferFromFpgaDone.objId, tempdata.transferFromFpgaDone.base, tempdata.transferFromFpgaDone.tag, tempdata.transferFromFpgaDone.cycles);
       } break;
     default:
         PORTAL_PRINTF("DmaIndicationJson_handleMessage: unknown channel 0x%x\n", channel);

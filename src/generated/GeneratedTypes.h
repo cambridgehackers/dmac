@@ -233,9 +233,9 @@ int MMUIndicationJson_handleMessage(struct PortalInternal *p, unsigned int chann
 extern MMUIndicationCb MMUIndicationJsonProxyReq;
 
 int DmaRequest_burstLen ( struct PortalInternal *p, const uint16_t burstLenBytes );
-int DmaRequest_read ( struct PortalInternal *p, const uint32_t objId, const uint32_t base, const uint32_t bytes, const uint8_t tag );
-int DmaRequest_write ( struct PortalInternal *p, const uint32_t objId, const uint32_t base, const uint32_t bytes, const uint8_t tag );
-enum { CHAN_NUM_DmaRequest_burstLen,CHAN_NUM_DmaRequest_read,CHAN_NUM_DmaRequest_write};
+int DmaRequest_transferToFpga ( struct PortalInternal *p, const uint32_t objId, const uint32_t base, const uint32_t bytes, const uint8_t tag );
+int DmaRequest_transferFromFpga ( struct PortalInternal *p, const uint32_t objId, const uint32_t base, const uint32_t bytes, const uint8_t tag );
+enum { CHAN_NUM_DmaRequest_burstLen,CHAN_NUM_DmaRequest_transferToFpga,CHAN_NUM_DmaRequest_transferFromFpga};
 #define DmaRequest_reqinfo 0x30014
 
 typedef struct {
@@ -246,36 +246,36 @@ typedef struct {
     uint32_t base;
     uint32_t bytes;
     uint8_t tag;
-} DmaRequest_readData;
+} DmaRequest_transferToFpgaData;
 typedef struct {
     uint32_t objId;
     uint32_t base;
     uint32_t bytes;
     uint8_t tag;
-} DmaRequest_writeData;
+} DmaRequest_transferFromFpgaData;
 typedef union {
     DmaRequest_burstLenData burstLen;
-    DmaRequest_readData read;
-    DmaRequest_writeData write;
+    DmaRequest_transferToFpgaData transferToFpga;
+    DmaRequest_transferFromFpgaData transferFromFpga;
 } DmaRequestData;
 int DmaRequest_handleMessage(struct PortalInternal *p, unsigned int channel, int messageFd);
 typedef struct {
     PORTAL_DISCONNECT disconnect;
     int (*burstLen) (  struct PortalInternal *p, const uint16_t burstLenBytes );
-    int (*read) (  struct PortalInternal *p, const uint32_t objId, const uint32_t base, const uint32_t bytes, const uint8_t tag );
-    int (*write) (  struct PortalInternal *p, const uint32_t objId, const uint32_t base, const uint32_t bytes, const uint8_t tag );
+    int (*transferToFpga) (  struct PortalInternal *p, const uint32_t objId, const uint32_t base, const uint32_t bytes, const uint8_t tag );
+    int (*transferFromFpga) (  struct PortalInternal *p, const uint32_t objId, const uint32_t base, const uint32_t bytes, const uint8_t tag );
 } DmaRequestCb;
 extern DmaRequestCb DmaRequestProxyReq;
 
 int DmaRequestJson_burstLen ( struct PortalInternal *p, const uint16_t burstLenBytes );
-int DmaRequestJson_read ( struct PortalInternal *p, const uint32_t objId, const uint32_t base, const uint32_t bytes, const uint8_t tag );
-int DmaRequestJson_write ( struct PortalInternal *p, const uint32_t objId, const uint32_t base, const uint32_t bytes, const uint8_t tag );
+int DmaRequestJson_transferToFpga ( struct PortalInternal *p, const uint32_t objId, const uint32_t base, const uint32_t bytes, const uint8_t tag );
+int DmaRequestJson_transferFromFpga ( struct PortalInternal *p, const uint32_t objId, const uint32_t base, const uint32_t bytes, const uint8_t tag );
 int DmaRequestJson_handleMessage(struct PortalInternal *p, unsigned int channel, int messageFd);
 extern DmaRequestCb DmaRequestJsonProxyReq;
 
-int DmaIndication_readDone ( struct PortalInternal *p, const uint32_t objId, const uint32_t base, const uint8_t tag, const uint32_t cycles );
-int DmaIndication_writeDone ( struct PortalInternal *p, const uint32_t objId, const uint32_t base, const uint8_t tag, const uint32_t cycles );
-enum { CHAN_NUM_DmaIndication_readDone,CHAN_NUM_DmaIndication_writeDone};
+int DmaIndication_transferToFpgaDone ( struct PortalInternal *p, const uint32_t objId, const uint32_t base, const uint8_t tag, const uint32_t cycles );
+int DmaIndication_transferFromFpgaDone ( struct PortalInternal *p, const uint32_t objId, const uint32_t base, const uint8_t tag, const uint32_t cycles );
+enum { CHAN_NUM_DmaIndication_transferToFpgaDone,CHAN_NUM_DmaIndication_transferFromFpgaDone};
 #define DmaIndication_reqinfo 0x20014
 
 typedef struct {
@@ -283,27 +283,27 @@ typedef struct {
     uint32_t base;
     uint8_t tag;
     uint32_t cycles;
-} DmaIndication_readDoneData;
+} DmaIndication_transferToFpgaDoneData;
 typedef struct {
     uint32_t objId;
     uint32_t base;
     uint8_t tag;
     uint32_t cycles;
-} DmaIndication_writeDoneData;
+} DmaIndication_transferFromFpgaDoneData;
 typedef union {
-    DmaIndication_readDoneData readDone;
-    DmaIndication_writeDoneData writeDone;
+    DmaIndication_transferToFpgaDoneData transferToFpgaDone;
+    DmaIndication_transferFromFpgaDoneData transferFromFpgaDone;
 } DmaIndicationData;
 int DmaIndication_handleMessage(struct PortalInternal *p, unsigned int channel, int messageFd);
 typedef struct {
     PORTAL_DISCONNECT disconnect;
-    int (*readDone) (  struct PortalInternal *p, const uint32_t objId, const uint32_t base, const uint8_t tag, const uint32_t cycles );
-    int (*writeDone) (  struct PortalInternal *p, const uint32_t objId, const uint32_t base, const uint8_t tag, const uint32_t cycles );
+    int (*transferToFpgaDone) (  struct PortalInternal *p, const uint32_t objId, const uint32_t base, const uint8_t tag, const uint32_t cycles );
+    int (*transferFromFpgaDone) (  struct PortalInternal *p, const uint32_t objId, const uint32_t base, const uint8_t tag, const uint32_t cycles );
 } DmaIndicationCb;
 extern DmaIndicationCb DmaIndicationProxyReq;
 
-int DmaIndicationJson_readDone ( struct PortalInternal *p, const uint32_t objId, const uint32_t base, const uint8_t tag, const uint32_t cycles );
-int DmaIndicationJson_writeDone ( struct PortalInternal *p, const uint32_t objId, const uint32_t base, const uint8_t tag, const uint32_t cycles );
+int DmaIndicationJson_transferToFpgaDone ( struct PortalInternal *p, const uint32_t objId, const uint32_t base, const uint8_t tag, const uint32_t cycles );
+int DmaIndicationJson_transferFromFpgaDone ( struct PortalInternal *p, const uint32_t objId, const uint32_t base, const uint8_t tag, const uint32_t cycles );
 int DmaIndicationJson_handleMessage(struct PortalInternal *p, unsigned int channel, int messageFd);
 extern DmaIndicationCb DmaIndicationJsonProxyReq;
 #ifdef __cplusplus

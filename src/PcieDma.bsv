@@ -24,9 +24,9 @@ interface PcieDma;
    interface Clock clock;
    interface Reset reset;
    // data out to application logic
-   interface Vector#(NumChannels,PipeOut#(MemDataF#(DataBusWidth))) readData;
+   interface Vector#(NumChannels,PipeOut#(MemDataF#(DataBusWidth))) toFpga;
    // data in from application logic
-   interface Vector#(NumChannels,PipeIn#(MemDataF#(DataBusWidth)))  writeData;
+   interface Vector#(NumChannels,PipeIn#(MemDataF#(DataBusWidth)))  fromFpga;
    // pins
    interface PciePins pcie;
 endinterface
@@ -47,8 +47,8 @@ module mkPcieDma
 
    interface clock = pcieTop.pins.clock;
    interface reset = pcieTop.pins.reset;
-   interface readData = pcieTop.pins.readData;
-   interface writeData = pcieTop.pins.writeData;
+   interface toFpga = pcieTop.pins.toFpga;
+   interface fromFpga = pcieTop.pins.fromFpga;
 `ifndef BOARD_bluesim
    interface pcie = pcieTop.pcie;
 `endif

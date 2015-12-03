@@ -12,8 +12,8 @@ public:
         Portal(id, DEFAULT_TILE, bufsize, NULL, NULL, item, param, this, poller), cb(cbarg) {};
     DmaIndicationProxy(int id, PortalPoller *poller) :
         Portal(id, DEFAULT_TILE, DmaIndication_reqinfo, NULL, NULL, NULL, NULL, this, poller), cb(&DmaIndicationProxyReq) {};
-    int readDone ( const uint32_t objId, const uint32_t base, const uint8_t tag, const uint32_t cycles ) { return cb->readDone (&pint, objId, base, tag, cycles); };
-    int writeDone ( const uint32_t objId, const uint32_t base, const uint8_t tag, const uint32_t cycles ) { return cb->writeDone (&pint, objId, base, tag, cycles); };
+    int transferToFpgaDone ( const uint32_t objId, const uint32_t base, const uint8_t tag, const uint32_t cycles ) { return cb->transferToFpgaDone (&pint, objId, base, tag, cycles); };
+    int transferFromFpgaDone ( const uint32_t objId, const uint32_t base, const uint8_t tag, const uint32_t cycles ) { return cb->transferFromFpgaDone (&pint, objId, base, tag, cycles); };
 };
 
 extern DmaIndicationCb DmaIndication_cbTable;
@@ -34,7 +34,7 @@ public:
     virtual void disconnect(void) {
         printf("DmaIndicationWrapper.disconnect called %d\n", pint.client_fd_number);
     };
-    virtual void readDone ( const uint32_t objId, const uint32_t base, const uint8_t tag, const uint32_t cycles ) = 0;
-    virtual void writeDone ( const uint32_t objId, const uint32_t base, const uint8_t tag, const uint32_t cycles ) = 0;
+    virtual void transferToFpgaDone ( const uint32_t objId, const uint32_t base, const uint8_t tag, const uint32_t cycles ) = 0;
+    virtual void transferFromFpgaDone ( const uint32_t objId, const uint32_t base, const uint8_t tag, const uint32_t cycles ) = 0;
 };
 #endif // _DMAINDICATION_H_

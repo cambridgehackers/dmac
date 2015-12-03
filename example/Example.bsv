@@ -30,19 +30,19 @@ module mkExample
 
    for (Integer channel = 0; channel < valueOf(NumChannels); channel = channel + 1) begin
       Reg#(Bit#(16)) iter <- mkReg(0, clocked_by clock, reset_by reset);
-      rule readDataRule;
-	 PipeOut#(MemDataF#(DataBusWidth)) readPipe = pcieDma.readData[channel];
-	 MemDataF#(DataBusWidth) md = readPipe.first();
-	 readPipe.deq();
+      rule toFpgaRule;
+	 PipeOut#(MemDataF#(DataBusWidth)) toFpgaPipe = pcieDma.toFpga[channel];
+	 MemDataF#(DataBusWidth) md = toFpgaPipe.first();
+	 toFpgaPipe.deq();
 	 // insert code here to consume md
       endrule
-      rule writeDataRule;
+      rule fromFpgaRule;
 	 // placeholder code to produce md
 	 // tag, first, and last are not checked by the library
 	 MemDataF#(DataBusWidth) md = MemDataF {data: ('hdada << 32) | (fromInteger(channel) << 16) | extend(iter),
 						tag: 0, first: False, last: False};
-	 PipeIn#(MemDataF#(DataBusWidth)) writePipe = pcieDma.writeData[channel];
-	 writePipe.enq(md);
+	 PipeIn#(MemDataF#(DataBusWidth)) fromFpgaPipe = pcieDma.fromFpga[channel];
+	 fromFpgaPipe.enq(md);
 	 iter <= iter + 1;
       endrule
    end

@@ -4,18 +4,18 @@ static ConnectalMethodJsonInfo DmaRequestInfo[] = {
     {"burstLen", ((ConnectalParamJsonInfo[]){
         {"burstLenBytes", Connectaloffsetof(DmaRequest_burstLenData,burstLenBytes), ITYPE_uint16_t},
         {NULL, CHAN_NUM_DmaRequest_burstLen}}) },
-    {"read", ((ConnectalParamJsonInfo[]){
-        {"objId", Connectaloffsetof(DmaRequest_readData,objId), ITYPE_uint32_t},
-        {"base", Connectaloffsetof(DmaRequest_readData,base), ITYPE_uint32_t},
-        {"bytes", Connectaloffsetof(DmaRequest_readData,bytes), ITYPE_uint32_t},
-        {"tag", Connectaloffsetof(DmaRequest_readData,tag), ITYPE_other},
-        {NULL, CHAN_NUM_DmaRequest_read}}) },
-    {"write", ((ConnectalParamJsonInfo[]){
-        {"objId", Connectaloffsetof(DmaRequest_writeData,objId), ITYPE_uint32_t},
-        {"base", Connectaloffsetof(DmaRequest_writeData,base), ITYPE_uint32_t},
-        {"bytes", Connectaloffsetof(DmaRequest_writeData,bytes), ITYPE_uint32_t},
-        {"tag", Connectaloffsetof(DmaRequest_writeData,tag), ITYPE_other},
-        {NULL, CHAN_NUM_DmaRequest_write}}) },{}};
+    {"transferToFpga", ((ConnectalParamJsonInfo[]){
+        {"objId", Connectaloffsetof(DmaRequest_transferToFpgaData,objId), ITYPE_uint32_t},
+        {"base", Connectaloffsetof(DmaRequest_transferToFpgaData,base), ITYPE_uint32_t},
+        {"bytes", Connectaloffsetof(DmaRequest_transferToFpgaData,bytes), ITYPE_uint32_t},
+        {"tag", Connectaloffsetof(DmaRequest_transferToFpgaData,tag), ITYPE_other},
+        {NULL, CHAN_NUM_DmaRequest_transferToFpga}}) },
+    {"transferFromFpga", ((ConnectalParamJsonInfo[]){
+        {"objId", Connectaloffsetof(DmaRequest_transferFromFpgaData,objId), ITYPE_uint32_t},
+        {"base", Connectaloffsetof(DmaRequest_transferFromFpgaData,base), ITYPE_uint32_t},
+        {"bytes", Connectaloffsetof(DmaRequest_transferFromFpgaData,bytes), ITYPE_uint32_t},
+        {"tag", Connectaloffsetof(DmaRequest_transferFromFpgaData,tag), ITYPE_other},
+        {NULL, CHAN_NUM_DmaRequest_transferFromFpga}}) },{}};
 
 int DmaRequestJson_burstLen ( struct PortalInternal *p, const uint16_t burstLenBytes )
 {
@@ -25,33 +25,33 @@ int DmaRequestJson_burstLen ( struct PortalInternal *p, const uint16_t burstLenB
     return 0;
 };
 
-int DmaRequestJson_read ( struct PortalInternal *p, const uint32_t objId, const uint32_t base, const uint32_t bytes, const uint8_t tag )
+int DmaRequestJson_transferToFpga ( struct PortalInternal *p, const uint32_t objId, const uint32_t base, const uint32_t bytes, const uint8_t tag )
 {
-    DmaRequest_readData tempdata;
+    DmaRequest_transferToFpgaData tempdata;
     tempdata.objId = objId;
     tempdata.base = base;
     tempdata.bytes = bytes;
     memcpy(&tempdata.tag, &tag, sizeof(tempdata.tag));
-    connectalJsonEncode(p, &tempdata, &DmaRequestInfo[CHAN_NUM_DmaRequest_read]);
+    connectalJsonEncode(p, &tempdata, &DmaRequestInfo[CHAN_NUM_DmaRequest_transferToFpga]);
     return 0;
 };
 
-int DmaRequestJson_write ( struct PortalInternal *p, const uint32_t objId, const uint32_t base, const uint32_t bytes, const uint8_t tag )
+int DmaRequestJson_transferFromFpga ( struct PortalInternal *p, const uint32_t objId, const uint32_t base, const uint32_t bytes, const uint8_t tag )
 {
-    DmaRequest_writeData tempdata;
+    DmaRequest_transferFromFpgaData tempdata;
     tempdata.objId = objId;
     tempdata.base = base;
     tempdata.bytes = bytes;
     memcpy(&tempdata.tag, &tag, sizeof(tempdata.tag));
-    connectalJsonEncode(p, &tempdata, &DmaRequestInfo[CHAN_NUM_DmaRequest_write]);
+    connectalJsonEncode(p, &tempdata, &DmaRequestInfo[CHAN_NUM_DmaRequest_transferFromFpga]);
     return 0;
 };
 
 DmaRequestCb DmaRequestJsonProxyReq = {
     portal_disconnect,
     DmaRequestJson_burstLen,
-    DmaRequestJson_read,
-    DmaRequestJson_write,
+    DmaRequestJson_transferToFpga,
+    DmaRequestJson_transferFromFpga,
 };
 int DmaRequestJson_handleMessage(struct PortalInternal *p, unsigned int channel, int messageFd)
 {
@@ -64,11 +64,11 @@ int DmaRequestJson_handleMessage(struct PortalInternal *p, unsigned int channel,
     case CHAN_NUM_DmaRequest_burstLen: {
         ((DmaRequestCb *)p->cb)->burstLen(p, tempdata.burstLen.burstLenBytes);
       } break;
-    case CHAN_NUM_DmaRequest_read: {
-        ((DmaRequestCb *)p->cb)->read(p, tempdata.read.objId, tempdata.read.base, tempdata.read.bytes, tempdata.read.tag);
+    case CHAN_NUM_DmaRequest_transferToFpga: {
+        ((DmaRequestCb *)p->cb)->transferToFpga(p, tempdata.transferToFpga.objId, tempdata.transferToFpga.base, tempdata.transferToFpga.bytes, tempdata.transferToFpga.tag);
       } break;
-    case CHAN_NUM_DmaRequest_write: {
-        ((DmaRequestCb *)p->cb)->write(p, tempdata.write.objId, tempdata.write.base, tempdata.write.bytes, tempdata.write.tag);
+    case CHAN_NUM_DmaRequest_transferFromFpga: {
+        ((DmaRequestCb *)p->cb)->transferFromFpga(p, tempdata.transferFromFpga.objId, tempdata.transferFromFpga.base, tempdata.transferFromFpga.bytes, tempdata.transferFromFpga.tag);
       } break;
     default:
         PORTAL_PRINTF("DmaRequestJson_handleMessage: unknown channel 0x%x\n", channel);

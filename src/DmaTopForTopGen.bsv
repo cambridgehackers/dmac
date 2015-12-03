@@ -53,7 +53,7 @@ module mkDmaTop#(DmaIndication indication0, DmaIndication indication1)(DmaTop);
    interface DmaTopPins pins;
       interface clock = defaultClock;
       interface reset = defaultReset;
-      interface readData = dma.readData;
-      interface writeData = dma.writeData;
+      interface toFpga = dma.toFpga;
+      interface fromFpga = dma.fromFpga;
    endinterface
 endmodule

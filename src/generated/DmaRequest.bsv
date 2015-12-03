@@ -26,6 +26,7 @@ import FIFO::*;
 import FIFOF::*;
 import GetPut::*;
 import Connectable::*;
+import Probe::*;
 import ConnectalConfig::*;
 import Pipe::*;
 import MemTypes::*;
@@ -45,20 +46,20 @@ typedef struct {
     Bit#(32) base;
     Bit#(32) bytes;
     Bit#(8) tag;
-} Read_Message deriving (Bits);
+} TransferToFpga_Message deriving (Bits);
 
 typedef struct {
     Bit#(32) objId;
     Bit#(32) base;
     Bit#(32) bytes;
     Bit#(8) tag;
-} Write_Message deriving (Bits);
+} TransferFromFpga_Message deriving (Bits);
 
 // exposed wrapper portal interface
 interface DmaRequestInputPipes;
     interface PipeOut#(BurstLen_Message) burstLen_PipeOut;
-    interface PipeOut#(Read_Message) read_PipeOut;
-    interface PipeOut#(Write_Message) write_PipeOut;
+    interface PipeOut#(TransferToFpga_Message) transferToFpga_PipeOut;
+    interface PipeOut#(TransferFromFpga_Message) transferFromFpga_PipeOut;
 
 endinterface
 interface DmaRequestInput;
@@ -81,14 +82,14 @@ instance Connectable#(DmaRequestInputPipes,DmaRequest);
         ifc.burstLen(request.burstLenBytes);
     endrule
 
-    rule handle_read_request;
-        let request <- toGet(pipes.read_PipeOut).get();
-        ifc.read(request.objId, request.base, request.bytes, request.tag);
+    rule handle_transferToFpga_request;
+        let request <- toGet(pipes.transferToFpga_PipeOut).get();
+        ifc.transferToFpga(request.objId, request.base, request.bytes, request.tag);
     endrule
 
-    rule handle_write_request;
-        let request <- toGet(pipes.write_PipeOut).get();
-        ifc.write(request.objId, request.base, request.bytes, request.tag);
+    rule handle_transferFromFpga_request;
+        let request <- toGet(pipes.transferFromFpga_PipeOut).get();
+        ifc.transferFromFpga(request.objId, request.base, request.bytes, request.tag);
     endrule
 
    endmodule
@@ -102,19 +103,19 @@ module mkDmaRequestInput(DmaRequestInput);
     AdapterFromBus#(SlaveDataBusWidth,BurstLen_Message) burstLen_requestAdapter <- mkAdapterFromBus();
     requestPipeIn[0] = burstLen_requestAdapter.in;
 
-    AdapterFromBus#(SlaveDataBusWidth,Read_Message) read_requestAdapter <- mkAdapterFromBus();
-    requestPipeIn[1] = read_requestAdapter.in;
+    AdapterFromBus#(SlaveDataBusWidth,TransferToFpga_Message) transferToFpga_requestAdapter <- mkAdapterFromBus();
+    requestPipeIn[1] = transferToFpga_requestAdapter.in;
 
-    AdapterFromBus#(SlaveDataBusWidth,Write_Message) write_requestAdapter <- mkAdapterFromBus();
-    requestPipeIn[2] = write_requestAdapter.in;
+    AdapterFromBus#(SlaveDataBusWidth,TransferFromFpga_Message) transferFromFpga_requestAdapter <- mkAdapterFromBus();
+    requestPipeIn[2] = transferFromFpga_requestAdapter.in;
 
     interface PipePortal portalIfc;
         interface PortalSize messageSize;
         method Bit#(16) size(Bit#(16) methodNumber);
             case (methodNumber)
             0: return fromInteger(valueOf(SizeOf#(BurstLen_Message)));
-            1: return fromInteger(valueOf(SizeOf#(Read_Message)));
-            2: return fromInteger(valueOf(SizeOf#(Write_Message)));
+            1: return fromInteger(valueOf(SizeOf#(TransferToFpga_Message)));
+            2: return fromInteger(valueOf(SizeOf#(TransferFromFpga_Message)));
             endcase
         endmethod
         endinterface
@@ -131,8 +132,8 @@ module mkDmaRequestInput(DmaRequestInput);
     endinterface
     interface DmaRequestInputPipes pipes;
         interface burstLen_PipeOut = burstLen_requestAdapter.out;
-        interface read_PipeOut = read_requestAdapter.out;
-        interface write_PipeOut = write_requestAdapter.out;
+        interface transferToFpga_PipeOut = transferToFpga_requestAdapter.out;
+        interface transferFromFpga_PipeOut = transferFromFpga_requestAdapter.out;
     endinterface
 endmodule
 
@@ -182,8 +183,8 @@ endinterface
 
 interface DmaRequestOutputPipeMethods;
     interface PipeIn#(BurstLen_Message) burstLen;
-    interface PipeIn#(Read_Message) read;
-    interface PipeIn#(Write_Message) write;
+    interface PipeIn#(TransferToFpga_Message) transferToFpga;
+    interface PipeIn#(TransferFromFpga_Message) transferFromFpga;
 
 endinterface
 
@@ -195,8 +196,8 @@ endinterface
 function Bit#(16) getDmaRequestMessageSize(Bit#(16) methodNumber);
     case (methodNumber)
             0: return fromInteger(valueOf(SizeOf#(BurstLen_Message)));
-            1: return fromInteger(valueOf(SizeOf#(Read_Message)));
-            2: return fromInteger(valueOf(SizeOf#(Write_Message)));
+            1: return fromInteger(valueOf(SizeOf#(TransferToFpga_Message)));
+            2: return fromInteger(valueOf(SizeOf#(TransferFromFpga_Message)));
     endcase
 endfunction
 
@@ -207,17 +208,17 @@ module mkDmaRequestOutputPipes(DmaRequestOutputPipes);
     AdapterToBus#(SlaveDataBusWidth,BurstLen_Message) burstLen_responseAdapter <- mkAdapterToBus();
     indicationPipes[0] = burstLen_responseAdapter.out;
 
-    AdapterToBus#(SlaveDataBusWidth,Read_Message) read_responseAdapter <- mkAdapterToBus();
-    indicationPipes[1] = read_responseAdapter.out;
+    AdapterToBus#(SlaveDataBusWidth,TransferToFpga_Message) transferToFpga_responseAdapter <- mkAdapterToBus();
+    indicationPipes[1] = transferToFpga_responseAdapter.out;
 
-    AdapterToBus#(SlaveDataBusWidth,Write_Message) write_responseAdapter <- mkAdapterToBus();
-    indicationPipes[2] = write_responseAdapter.out;
+    AdapterToBus#(SlaveDataBusWidth,TransferFromFpga_Message) transferFromFpga_responseAdapter <- mkAdapterToBus();
+    indicationPipes[2] = transferFromFpga_responseAdapter.out;
 
     PortalInterrupt#(SlaveDataBusWidth) intrInst <- mkPortalInterrupt(indicationPipes);
     interface DmaRequestOutputPipeMethods methods;
     interface burstLen = burstLen_responseAdapter.in;
-    interface read = read_responseAdapter.in;
-    interface write = write_responseAdapter.in;
+    interface transferToFpga = transferToFpga_responseAdapter.in;
+    interface transferFromFpga = transferFromFpga_responseAdapter.in;
 
     endinterface
     interface PipePortal portalIfc;
@@ -239,13 +240,13 @@ module mkDmaRequestOutput(DmaRequestOutput);
         indicationPipes.methods.burstLen.enq(BurstLen_Message {burstLenBytes: burstLenBytes});
         //$display("indicationMethod 'burstLen' invoked");
     endmethod
-    method Action read(Bit#(32) objId, Bit#(32) base, Bit#(32) bytes, Bit#(8) tag);
-        indicationPipes.methods.read.enq(Read_Message {objId: objId, base: base, bytes: bytes, tag: tag});
-        //$display("indicationMethod 'read' invoked");
+    method Action transferToFpga(Bit#(32) objId, Bit#(32) base, Bit#(32) bytes, Bit#(8) tag);
+        indicationPipes.methods.transferToFpga.enq(TransferToFpga_Message {objId: objId, base: base, bytes: bytes, tag: tag});
+        //$display("indicationMethod 'transferToFpga' invoked");
     endmethod
-    method Action write(Bit#(32) objId, Bit#(32) base, Bit#(32) bytes, Bit#(8) tag);
-        indicationPipes.methods.write.enq(Write_Message {objId: objId, base: base, bytes: bytes, tag: tag});
-        //$display("indicationMethod 'write' invoked");
+    method Action transferFromFpga(Bit#(32) objId, Bit#(32) base, Bit#(32) bytes, Bit#(8) tag);
+        indicationPipes.methods.transferFromFpga.enq(TransferFromFpga_Message {objId: objId, base: base, bytes: bytes, tag: tag});
+        //$display("indicationMethod 'transferFromFpga' invoked");
     endmethod
     endinterface
     interface PipePortal portalIfc = indicationPipes.portalIfc;
@@ -259,8 +260,8 @@ endinstance
 
 interface DmaRequestInverse;
     method ActionValue#(BurstLen_Message) burstLen;
-    method ActionValue#(Read_Message) read;
-    method ActionValue#(Write_Message) write;
+    method ActionValue#(TransferToFpga_Message) transferToFpga;
+    method ActionValue#(TransferFromFpga_Message) transferFromFpga;
 
 endinterface
 
@@ -272,8 +273,8 @@ endinterface
 instance Connectable#(DmaRequestInverse, DmaRequestOutputPipeMethods);
    module mkConnection#(DmaRequestInverse in, DmaRequestOutputPipeMethods out)(Empty);
     mkConnection(in.burstLen, out.burstLen);
-    mkConnection(in.read, out.read);
-    mkConnection(in.write, out.write);
+    mkConnection(in.transferToFpga, out.transferToFpga);
+    mkConnection(in.transferFromFpga, out.transferFromFpga);
 
    endmodule
 endinstance
@@ -281,19 +282,19 @@ endinstance
 (* synthesize *)
 module mkDmaRequestInverter(DmaRequestInverter);
     FIFOF#(BurstLen_Message) fifo_burstLen <- mkFIFOF();
-    FIFOF#(Read_Message) fifo_read <- mkFIFOF();
-    FIFOF#(Write_Message) fifo_write <- mkFIFOF();
+    FIFOF#(TransferToFpga_Message) fifo_transferToFpga <- mkFIFOF();
+    FIFOF#(TransferFromFpga_Message) fifo_transferFromFpga <- mkFIFOF();
 
     interface DmaController::DmaRequest ifc;
 
     method Action burstLen(Bit#(16) burstLenBytes);
         fifo_burstLen.enq(BurstLen_Message {burstLenBytes: burstLenBytes});
     endmethod
-    method Action read(Bit#(32) objId, Bit#(32) base, Bit#(32) bytes, Bit#(8) tag);
-        fifo_read.enq(Read_Message {objId: objId, base: base, bytes: bytes, tag: tag});
+    method Action transferToFpga(Bit#(32) objId, Bit#(32) base, Bit#(32) bytes, Bit#(8) tag);
+        fifo_transferToFpga.enq(TransferToFpga_Message {objId: objId, base: base, bytes: bytes, tag: tag});
     endmethod
-    method Action write(Bit#(32) objId, Bit#(32) base, Bit#(32) bytes, Bit#(8) tag);
-        fifo_write.enq(Write_Message {objId: objId, base: base, bytes: bytes, tag: tag});
+    method Action transferFromFpga(Bit#(32) objId, Bit#(32) base, Bit#(32) bytes, Bit#(8) tag);
+        fifo_transferFromFpga.enq(TransferFromFpga_Message {objId: objId, base: base, bytes: bytes, tag: tag});
     endmethod
     endinterface
     interface DmaRequestInverse inverseIfc;
@@ -302,13 +303,13 @@ module mkDmaRequestInverter(DmaRequestInverter);
         fifo_burstLen.deq;
         return fifo_burstLen.first;
     endmethod
-    method ActionValue#(Read_Message) read;
-        fifo_read.deq;
-        return fifo_read.first;
+    method ActionValue#(TransferToFpga_Message) transferToFpga;
+        fifo_transferToFpga.deq;
+        return fifo_transferToFpga.first;
     endmethod
-    method ActionValue#(Write_Message) write;
-        fifo_write.deq;
-        return fifo_write.first;
+    method ActionValue#(TransferFromFpga_Message) transferFromFpga;
+        fifo_transferFromFpga.deq;
+        return fifo_transferFromFpga.first;
     endmethod
     endinterface
 endmodule
@@ -316,19 +317,19 @@ endmodule
 (* synthesize *)
 module mkDmaRequestInverterV(DmaRequestInverter);
     PutInverter#(BurstLen_Message) inv_burstLen <- mkPutInverter();
-    PutInverter#(Read_Message) inv_read <- mkPutInverter();
-    PutInverter#(Write_Message) inv_write <- mkPutInverter();
+    PutInverter#(TransferToFpga_Message) inv_transferToFpga <- mkPutInverter();
+    PutInverter#(TransferFromFpga_Message) inv_transferFromFpga <- mkPutInverter();
 
     interface DmaController::DmaRequest ifc;
 
     method Action burstLen(Bit#(16) burstLenBytes);
         inv_burstLen.mod.put(BurstLen_Message {burstLenBytes: burstLenBytes});
     endmethod
-    method Action read(Bit#(32) objId, Bit#(32) base, Bit#(32) bytes, Bit#(8) tag);
-        inv_read.mod.put(Read_Message {objId: objId, base: base, bytes: bytes, tag: tag});
+    method Action transferToFpga(Bit#(32) objId, Bit#(32) base, Bit#(32) bytes, Bit#(8) tag);
+        inv_transferToFpga.mod.put(TransferToFpga_Message {objId: objId, base: base, bytes: bytes, tag: tag});
     endmethod
-    method Action write(Bit#(32) objId, Bit#(32) base, Bit#(32) bytes, Bit#(8) tag);
-        inv_write.mod.put(Write_Message {objId: objId, base: base, bytes: bytes, tag: tag});
+    method Action transferFromFpga(Bit#(32) objId, Bit#(32) base, Bit#(32) bytes, Bit#(8) tag);
+        inv_transferFromFpga.mod.put(TransferFromFpga_Message {objId: objId, base: base, bytes: bytes, tag: tag});
     endmethod
     endinterface
     interface DmaRequestInverse inverseIfc;
@@ -337,12 +338,12 @@ module mkDmaRequestInverterV(DmaRequestInverter);
         let v <- inv_burstLen.inverse.get;
         return v;
     endmethod
-    method ActionValue#(Read_Message) read;
-        let v <- inv_read.inverse.get;
+    method ActionValue#(TransferToFpga_Message) transferToFpga;
+        let v <- inv_transferToFpga.inverse.get;
         return v;
     endmethod
-    method ActionValue#(Write_Message) write;
-        let v <- inv_write.inverse.get;
+    method ActionValue#(TransferFromFpga_Message) transferFromFpga;
+        let v <- inv_transferFromFpga.inverse.get;
         return v;
     endmethod
     endinterface
