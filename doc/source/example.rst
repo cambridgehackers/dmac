@@ -8,9 +8,12 @@ Example.bsv
 
 Here is simple user logic for the FPGA::
 
+    `include "ConnectalProjectConfig.bsv"
+
     import FIFOF::*;
     import GetPut::*;
     import Connectable::*;
+    import ConnectalConfig::*;
 
     import PcieDma::*;
 
@@ -18,31 +21,45 @@ Here is simple user logic for the FPGA::
        interface PciePins pcie;
     endinterface
 
+    `ifndef BOARD_bluesim
     (* no_default_clock, no_default_reset *)
-    module mkExample#(Clock pci_sys_clk_p, Clock pci_sys_clk_n, Reset pci_sys_reset_n)
-                     (Example);
+    `endif
+    module mkExample
+    `ifndef BOARD_bluesim
+    #(Clock pci_sys_clk_p, Clock pci_sys_clk_n, Reset pci_sys_reset_n)
+    `endif
+    (Example);
 
-       let pcieDma <- mkPcieDma(pci_sys_clk_p, pci_sys_clk_n, pci_sys_reset_n);
+       PcieDma pcieDma <- mkPcieDma(
+    `ifndef BOARD_bluesim
+	  pci_sys_clk_p, pci_sys_clk_n, pci_sys_reset_n
+    `endif
+	  );
        let clock = pcieDma.clock();
        let reset = pcieDma.reset();
 
-       for (Integer channel = 0; channel < valueOf(NumChannels); channel = channel + 1)
-       begin
-	  FIFOF#(MemDataF#(DataBusWidth)) buffer
-             <- mkDualClockBramFIFOF(clock, reset, clock, reset);
-	  rule toFpgaDataRule;
-	     let md <- toGet(pcieDma.toFpgaData[channel]).get();
+       for (Integer channel = 0; channel < valueOf(NumChannels); channel = channel + 1) begin
+	  Reg#(Bit#(16)) iter <- mkReg(0, clocked_by clock, reset_by reset);
+	  rule toFpgaRule;
+	     PipeOut#(MemDataF#(DataBusWidth)) toFpgaPipe = pcieDma.toFpga[channel];
+	     MemDataF#(DataBusWidth) md = toFpgaPipe.first();
+	     toFpgaPipe.deq();
+	     // insert code here to consume md
 	  endrule
-	  rule writeDataRule;
-	     let md = unpack(0);
-	     pcieDma.writeData[channel].enq(md);
+	  rule fromFpgaRule;
+	     // placeholder code to produce md
+	     // tag, first, and last are not checked by the library
+	     MemDataF#(DataBusWidth) md = MemDataF {data: ('hdada << 32) | (fromInteger(channel) << 16) | extend(iter),
+						    tag: 0, first: False, last: False};
+	     PipeIn#(MemDataF#(DataBusWidth)) fromFpgaPipe = pcieDma.fromFpga[channel];
+	     fromFpgaPipe.enq(md);
+	     iter <= iter + 1;
 	  endrule
        end
 
        interface pcie = pcieDma.pcie;
 
     endmodule
-
 
 Example.cpp
 -----------
@@ -67,30 +84,32 @@ Here is the corresponding user software::
     int doWrite = 1;
     int doRead = 1;
     int numchannels = 1;
-    int numiters = 1;
-    int burstLenBytes = 128;
+    int numIters = 10;
+    int burstLenBytes = 256;
 
     class ChannelWorker : public DmaCallback {
 	DmaChannel *channel;
 	int channelNumber;
+	int numReads;
+	int numWrites;
 	int waitCount;
 	DmaBuffer *buffers[4];
 	static void *threadfn(void *c);
 	void run();
 
-	static int started;
+	static volatile int started;
 	static pthread_t *threads;
 
     public:
 	ChannelWorker(int channelNumber)
-	: channelNumber(channelNumber), waitCount(0) {
+	: channelNumber(channelNumber), numReads(0), numWrites(0), waitCount(0) {
 
 	    channel = new DmaChannel(channelNumber, this);
 
-	    fprintf(stderr, "[%s:%d] channel %d allocating buffers\n",
-                    __FUNCTION__, __LINE__, channelNumber);
+	    fprintf(stderr, "[%s:%d] channel %d allocating buffers\n", __FUNCTION__, __LINE__, channelNumber);
 	    for (int i = 0; i < 4; i++) {
 		buffers[i] = new DmaBuffer(arraySize);
+		memset(buffers[i]->buffer(), 0xba, arraySize);
 	    }
 	}
 
@@ -104,16 +123,38 @@ Here is the corresponding user software::
 	    return totalBeats / (double)cycles;
 	}
 	void readDone ( uint32_t sglId, uint32_t base, const uint8_t tag, uint32_t cycles ) {
-	    cycles *= -1;
-	    fprintf(stderr, "sglId=%d base=%08x tag=%d cycles=%d read bandwidth %5.2f MB/s link utilization %5.2f%%\n",
-		    sglId, base, tag, cycles, 16*250*linkUtilization(cycles), 100.0*linkUtilization(cycles, 1));
-	    waitCount--;
+	    fprintf(stderr, "[%s:%d] sglId=%d base=%08x tag=%d burstLenBytes=%d cycles=%d read bandwidth %5.2f MB/s link utilization %5.2f%%\n",
+		    __FUNCTION__, __LINE__, sglId, base, tag, burstLenBytes, cycles, 16*250*linkUtilization(cycles), 100.0*linkUtilization(cycles, 1));
+	    if (numReads) {
+		fprintf(stderr, "[%s:%d] channel %d requesting dma read size=%d\n", __FUNCTION__, __LINE__, channelNumber, arraySize);
+		int tag = 0;
+		channel->read(buffers[0]->reference(), 0, arraySize, tag);
+		numReads--;
+	    } else {
+		waitCount--;
+		fprintf(stderr, "[%s:%d] channel %d waiting for %d responses\n", __FUNCTION__, __LINE__, channelNumber, waitCount);
+	    }
 	}
 	void writeDone ( uint32_t sglId, uint32_t base, uint8_t tag, uint32_t cycles ) {
-	    cycles *= -1;
-	    fprintf(stderr, "sglId=%d base=%08x tag=%d cycles=%d write bandwidth %5.2f MB/s link utilization %5.2f%%\n",
-		    sglId, base, tag, cycles, 16*250*linkUtilization(cycles), 100.0*linkUtilization(cycles, 1));
-	    waitCount--;
+	    fprintf(stderr, "[%s:%d] sglId=%d base=%08x tag=%d burstLenBytes=%d cycles=%d write bandwidth %5.2f MB/s link utilization %5.2f%%\n",
+		    __FUNCTION__, __LINE__, sglId, base, tag, burstLenBytes, cycles, 16*250*linkUtilization(cycles), 100.0*linkUtilization(cycles, 1));
+	    if (0)
+	    for (int i = 0; i < 4; i++) {
+	      if (buffers[i]->reference() == sglId) {
+		for (int j = 0; j < 8; j++) {
+		  fprintf(stderr, "%d: %016lx\n", j, *(uint64_t *)(buffers[i]->buffer() + j*8));
+		}
+	      }
+	    }
+	    if (numWrites) {
+		fprintf(stderr, "[%s:%d] channel %d requesting dma write size=%d\n", __FUNCTION__, __LINE__, channelNumber, arraySize);
+		int tag = 1;
+		channel->write(buffers[1]->reference(), 0, arraySize, tag);
+		numWrites--;
+	    } else {
+		waitCount--;
+		fprintf(stderr, "[%s:%d] channel %d waiting for %d responses\n", __FUNCTION__, __LINE__, channelNumber, waitCount);
+	    }
 	}
 	static void runTest();
     };
@@ -130,31 +171,39 @@ Here is the corresponding user software::
 
     void ChannelWorker::run()
     {
-	for (int i = 0; i < numiters; i++) {
-	    if (doRead) {
-		fprintf(stderr, "[%s:%d] channel %d requesting dma read size=%d\n",
-                        __FUNCTION__, __LINE__, channelNumber, arraySize);
-		int tag = waitCount;
+	channel->setBurstLen(burstLenBytes);
+	for (int i = 0; i < 2; i++) {
+	    if (i == 0) {
+		numReads = numIters;
+		numWrites = 0;
+	    } else {
+		numReads = 0;
+		numWrites = numIters;
+	    }
+	    if (numReads) {
+		fprintf(stderr, "[%s:%d] channel %d requesting dma read size=%d\n", __FUNCTION__, __LINE__, channelNumber, arraySize);
+		int tag = 0;
 		channel->read(buffers[0]->reference(), 0, arraySize, tag);
 		waitCount++;
+		numReads--;
 	    }
 
-	    if (doWrite) {
-		fprintf(stderr, "[%s:%d] channel %d requesting dma write size=%d\n",
-		        __FUNCTION__, __LINE__, channelNumber, arraySize);
-		int tag = waitCount;
+	    if (numWrites) {
+		fprintf(stderr, "[%s:%d] channel %d requesting dma write size=%d\n", __FUNCTION__, __LINE__, channelNumber, arraySize);
+		int tag = 1;
 		channel->write(buffers[1]->reference(), 0, arraySize, tag);
 		waitCount++;
+		numWrites--;
 	    }
-	}
-	fprintf(stderr, "[%s:%d] channel %d waiting for responses\n",
-                         __FUNCTION__, __LINE__, channelNumber);
-	while (waitCount > 0) {
-	  channel->checkIndications();
+	    fprintf(stderr, "[%s:%d] channel %d waiting for responses\n", __FUNCTION__, __LINE__, channelNumber);
+	    while (waitCount > 0) {
+		channel->checkIndications();
+	    }
+	    waitCount = 0;
 	}
     }
 
-    int ChannelWorker::started = 0;
+    volatile int ChannelWorker::started = 0;
     pthread_t *ChannelWorker::threads = 0;
 
     void ChannelWorker::runTest()
@@ -190,11 +239,11 @@ Here is the corresponding user software::
 		break;
 	    case 'b':
 		burstLenBytes = strtoul(optarg, 0, 0);
-		if (burstLenBytes > 128)
-		  burstLenBytes = 128;
+		if (burstLenBytes > 1024)
+		  burstLenBytes = 1024;
 		break;
 	    case 'i':
-		numiters = strtoul(optarg, 0, 0);
+		numIters = strtoul(optarg, 0, 0);
 		break;
 	    case 's': {
 		char *endptr = 0;
