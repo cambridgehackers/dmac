@@ -30,8 +30,8 @@ Here is simple user logic for the FPGA::
        begin
 	  FIFOF#(MemDataF#(DataBusWidth)) buffer
              <- mkDualClockBramFIFOF(clock, reset, clock, reset);
-	  rule readDataRule;
-	     let md <- toGet(pcieDma.readData[channel]).get();
+	  rule toFpgaDataRule;
+	     let md <- toGet(pcieDma.toFpgaData[channel]).get();
 	  endrule
 	  rule writeDataRule;
 	     let md = unpack(0);

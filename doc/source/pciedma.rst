@@ -10,7 +10,7 @@ Typedefs and Structures
 
 .. bsv:struct:: MemDataF#(DataBusWidth)
 
-   One beat of the payload of a physical or logical memory read or write request.
+   One beat of the payload of a physical or logical memory transferToFpga or transferFromFpga request.
 
    .. bsv:field:: Bit#(DataBusWidth) data
 
@@ -41,11 +41,11 @@ BSV Interface PcieDma
 
       The corresponding reset used for the external interfaces of the bsv:module::mkPcieDma module.
 
-   .. bsv:subinterface:: Vector#(NumChannels,PipeOut#(MemDataF#(DataBusWidth))) readData
+   .. bsv:subinterface:: Vector#(NumChannels,PipeOut#(MemDataF#(DataBusWidth))) toFpga
 
       Transmits data read from DRAM, tagged by the request number.
 
-   .. bsv:subinterface:: Vector#(NumChannels,PipeIn#(MemDataF#(DataBusWidth)))  writeData
+   .. bsv:subinterface:: Vector#(NumChannels,PipeIn#(MemDataF#(DataBusWidth)))  fromFpga
 
       Receives data to be written to DRAM.
 
