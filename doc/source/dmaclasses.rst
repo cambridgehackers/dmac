@@ -49,7 +49,9 @@ DmaChannel Class
 
    .. cpp:function:: void checkIndications()
 
-      Checks for notification of completion of DMA requests.
+      Checks for notification of completion of DMA requests. Waits for
+      an interrupt on this channel if there are no messages from the
+      FPGA.
 
       Thread safe.
 
@@ -58,9 +60,11 @@ DmaChannel Class
       Issues a DMA transferToFpga request on this channel.
 
        * :cpp:var:`objref` is the identifier returned from :cpp:member:`DmaBuffer::reference`.
-       * :cpp:var:`base` is offset, in bytes, from which to start reading.
+       * :cpp:var:`base` is offset, in bytes, from which to start reading from memory and transmitting to the FPGA.
        * :cpp:var:`numbytes` is the number of bytes to read.
-       * :cpp:var:`tag` is an opaque identifer used to identify this request when invoking :cpp:func:`DmaCallback::transferToFpgaDone`.
+       * :cpp:var:`tag` is an opaque identifer used to identify this
+         request when invoking
+         :cpp:func:`DmaCallback::transferToFpgaDone`.
 
       Thread safe.
 
@@ -69,7 +73,7 @@ DmaChannel Class
       Issues a DMA transferFromFpga request on this channel.
 
        * :cpp:var:`objref` is the identifier returned from :cpp:member:`DmaBuffer::reference`.
-       * :cpp:var:`base` is offset, in bytes, at which to start writing.
+       * :cpp:var:`base` is offset, in bytes, at which to start writing the data received from the FPGA.
        * :cpp:var:`numbytes` is the number of bytes to write.
        * :cpp:var:`tag` is an opaque identifer used to identify this request when invoking :cpp:func:`DmaCallback::transferFromFpgaDone`.
 
