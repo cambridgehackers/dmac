@@ -86,4 +86,4 @@ publish:
 	mkdir -p manifests
 	repo manifest -r -o manifests/manifest-$(VERSION).xml
 	rsync -av manifests ../dmac-$(VERSION)/
-	cd ..; tar -zcvf dmac-$(VERSION).tar.gz dmac-$(VERSION)
+	cd ..; tar --exclude=.git -zcvf dmac-$(VERSION).tar.gz dmac-$(VERSION)
