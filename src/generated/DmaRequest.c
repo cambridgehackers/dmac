@@ -1,12 +1,22 @@
 #include "GeneratedTypes.h"
 
-int DmaRequest_burstLen ( struct PortalInternal *p, const uint16_t burstLenBytes )
+int DmaRequest_writeRequestSize ( struct PortalInternal *p, const uint16_t burstLenBytes )
 {
-    volatile unsigned int* temp_working_addr_start = p->item->mapchannelReq(p, CHAN_NUM_DmaRequest_burstLen, 2);
+    volatile unsigned int* temp_working_addr_start = p->item->mapchannelReq(p, CHAN_NUM_DmaRequest_writeRequestSize, 2);
     volatile unsigned int* temp_working_addr = temp_working_addr_start;
-    if (p->item->busywait(p, CHAN_NUM_DmaRequest_burstLen, "DmaRequest_burstLen")) return 1;
+    if (p->item->busywait(p, CHAN_NUM_DmaRequest_writeRequestSize, "DmaRequest_writeRequestSize")) return 1;
     p->item->write(p, &temp_working_addr, burstLenBytes);
-    p->item->send(p, temp_working_addr_start, (CHAN_NUM_DmaRequest_burstLen << 16) | 2, -1);
+    p->item->send(p, temp_working_addr_start, (CHAN_NUM_DmaRequest_writeRequestSize << 16) | 2, -1);
+    return 0;
+};
+
+int DmaRequest_readRequestSize ( struct PortalInternal *p, const uint16_t readRequestBytes )
+{
+    volatile unsigned int* temp_working_addr_start = p->item->mapchannelReq(p, CHAN_NUM_DmaRequest_readRequestSize, 2);
+    volatile unsigned int* temp_working_addr = temp_working_addr_start;
+    if (p->item->busywait(p, CHAN_NUM_DmaRequest_readRequestSize, "DmaRequest_readRequestSize")) return 1;
+    p->item->write(p, &temp_working_addr, readRequestBytes);
+    p->item->send(p, temp_working_addr_start, (CHAN_NUM_DmaRequest_readRequestSize << 16) | 2, -1);
     return 0;
 };
 
@@ -38,7 +48,8 @@ int DmaRequest_transferFromFpga ( struct PortalInternal *p, const uint32_t objId
 
 DmaRequestCb DmaRequestProxyReq = {
     portal_disconnect,
-    DmaRequest_burstLen,
+    DmaRequest_writeRequestSize,
+    DmaRequest_readRequestSize,
     DmaRequest_transferToFpga,
     DmaRequest_transferFromFpga,
 };
@@ -50,11 +61,17 @@ int DmaRequest_handleMessage(struct PortalInternal *p, unsigned int channel, int
     DmaRequestData tempdata __attribute__ ((unused));
     volatile unsigned int* temp_working_addr = p->item->mapchannelInd(p, channel);
     switch (channel) {
-    case CHAN_NUM_DmaRequest_burstLen: {
+    case CHAN_NUM_DmaRequest_writeRequestSize: {
         
         p->item->recv(p, temp_working_addr, 1, &tmpfd);
         tmp = p->item->read(p, &temp_working_addr);
-        tempdata.burstLen.burstLenBytes = (uint16_t)(((tmp)&0xfffful));((DmaRequestCb *)p->cb)->burstLen(p, tempdata.burstLen.burstLenBytes);
+        tempdata.writeRequestSize.burstLenBytes = (uint16_t)(((tmp)&0xfffful));((DmaRequestCb *)p->cb)->writeRequestSize(p, tempdata.writeRequestSize.burstLenBytes);
+      } break;
+    case CHAN_NUM_DmaRequest_readRequestSize: {
+        
+        p->item->recv(p, temp_working_addr, 1, &tmpfd);
+        tmp = p->item->read(p, &temp_working_addr);
+        tempdata.readRequestSize.readRequestBytes = (uint16_t)(((tmp)&0xfffful));((DmaRequestCb *)p->cb)->readRequestSize(p, tempdata.readRequestSize.readRequestBytes);
       } break;
     case CHAN_NUM_DmaRequest_transferToFpga: {
         

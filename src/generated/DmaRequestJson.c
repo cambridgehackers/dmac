@@ -1,9 +1,12 @@
 #include "GeneratedTypes.h"
 
 static ConnectalMethodJsonInfo DmaRequestInfo[] = {
-    {"burstLen", ((ConnectalParamJsonInfo[]){
-        {"burstLenBytes", Connectaloffsetof(DmaRequest_burstLenData,burstLenBytes), ITYPE_uint16_t},
-        {NULL, CHAN_NUM_DmaRequest_burstLen}}) },
+    {"writeRequestSize", ((ConnectalParamJsonInfo[]){
+        {"burstLenBytes", Connectaloffsetof(DmaRequest_writeRequestSizeData,burstLenBytes), ITYPE_uint16_t},
+        {NULL, CHAN_NUM_DmaRequest_writeRequestSize}}) },
+    {"readRequestSize", ((ConnectalParamJsonInfo[]){
+        {"readRequestBytes", Connectaloffsetof(DmaRequest_readRequestSizeData,readRequestBytes), ITYPE_uint16_t},
+        {NULL, CHAN_NUM_DmaRequest_readRequestSize}}) },
     {"transferToFpga", ((ConnectalParamJsonInfo[]){
         {"objId", Connectaloffsetof(DmaRequest_transferToFpgaData,objId), ITYPE_uint32_t},
         {"base", Connectaloffsetof(DmaRequest_transferToFpgaData,base), ITYPE_uint32_t},
@@ -17,11 +20,19 @@ static ConnectalMethodJsonInfo DmaRequestInfo[] = {
         {"tag", Connectaloffsetof(DmaRequest_transferFromFpgaData,tag), ITYPE_other},
         {NULL, CHAN_NUM_DmaRequest_transferFromFpga}}) },{}};
 
-int DmaRequestJson_burstLen ( struct PortalInternal *p, const uint16_t burstLenBytes )
+int DmaRequestJson_writeRequestSize ( struct PortalInternal *p, const uint16_t burstLenBytes )
 {
-    DmaRequest_burstLenData tempdata;
+    DmaRequest_writeRequestSizeData tempdata;
     tempdata.burstLenBytes = burstLenBytes;
-    connectalJsonEncode(p, &tempdata, &DmaRequestInfo[CHAN_NUM_DmaRequest_burstLen]);
+    connectalJsonEncode(p, &tempdata, &DmaRequestInfo[CHAN_NUM_DmaRequest_writeRequestSize]);
+    return 0;
+};
+
+int DmaRequestJson_readRequestSize ( struct PortalInternal *p, const uint16_t readRequestBytes )
+{
+    DmaRequest_readRequestSizeData tempdata;
+    tempdata.readRequestBytes = readRequestBytes;
+    connectalJsonEncode(p, &tempdata, &DmaRequestInfo[CHAN_NUM_DmaRequest_readRequestSize]);
     return 0;
 };
 
@@ -49,7 +60,8 @@ int DmaRequestJson_transferFromFpga ( struct PortalInternal *p, const uint32_t o
 
 DmaRequestCb DmaRequestJsonProxyReq = {
     portal_disconnect,
-    DmaRequestJson_burstLen,
+    DmaRequestJson_writeRequestSize,
+    DmaRequestJson_readRequestSize,
     DmaRequestJson_transferToFpga,
     DmaRequestJson_transferFromFpga,
 };
@@ -61,8 +73,11 @@ int DmaRequestJson_handleMessage(struct PortalInternal *p, unsigned int channel,
     DmaRequestData tempdata __attribute__ ((unused));
     channel = connnectalJsonDecode(p, channel, &tempdata, DmaRequestInfo);
     switch (channel) {
-    case CHAN_NUM_DmaRequest_burstLen: {
-        ((DmaRequestCb *)p->cb)->burstLen(p, tempdata.burstLen.burstLenBytes);
+    case CHAN_NUM_DmaRequest_writeRequestSize: {
+        ((DmaRequestCb *)p->cb)->writeRequestSize(p, tempdata.writeRequestSize.burstLenBytes);
+      } break;
+    case CHAN_NUM_DmaRequest_readRequestSize: {
+        ((DmaRequestCb *)p->cb)->readRequestSize(p, tempdata.readRequestSize.readRequestBytes);
       } break;
     case CHAN_NUM_DmaRequest_transferToFpga: {
         ((DmaRequestCb *)p->cb)->transferToFpga(p, tempdata.transferToFpga.objId, tempdata.transferToFpga.base, tempdata.transferToFpga.bytes, tempdata.transferToFpga.tag);

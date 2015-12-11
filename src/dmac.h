@@ -54,7 +54,8 @@ class DmaChannel {
   int channel;
   volatile int waitCount;
   bool singleThreadedAccess;
-  int burstLenBytes;
+  int writeRequestSize;
+  int readRequestSize;
   friend class DmaIndication;
   friend class DmaController;
   static void *threadfn(void *c);
@@ -66,6 +67,8 @@ public:
     int transferToFpga ( const uint32_t objId, const uint32_t base, const uint32_t bytes, const uint8_t tag );
     // issue a DMA transferFromFpga request
     int transferFromFpga ( const uint32_t objId, const uint32_t base, const uint32_t bytes, const uint8_t tag );
-    // change burstLenBytes
-    int setBurstLen(int burstLen);
+    // change writeRequestSize
+    int setWriteRequestSize(int writeRequest);
+    // change readRequestSize
+    int setReadRequestSize(int readRequest);
 };

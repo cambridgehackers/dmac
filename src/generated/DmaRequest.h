@@ -12,7 +12,8 @@ public:
         Portal(id, DEFAULT_TILE, bufsize, NULL, NULL, item, param, this, poller), cb(cbarg) {};
     DmaRequestProxy(int id, PortalPoller *poller) :
         Portal(id, DEFAULT_TILE, DmaRequest_reqinfo, NULL, NULL, NULL, NULL, this, poller), cb(&DmaRequestProxyReq) {};
-    int burstLen ( const uint16_t burstLenBytes ) { return cb->burstLen (&pint, burstLenBytes); };
+    int writeRequestSize ( const uint16_t burstLenBytes ) { return cb->writeRequestSize (&pint, burstLenBytes); };
+    int readRequestSize ( const uint16_t readRequestBytes ) { return cb->readRequestSize (&pint, readRequestBytes); };
     int transferToFpga ( const uint32_t objId, const uint32_t base, const uint32_t bytes, const uint8_t tag ) { return cb->transferToFpga (&pint, objId, base, bytes, tag); };
     int transferFromFpga ( const uint32_t objId, const uint32_t base, const uint32_t bytes, const uint8_t tag ) { return cb->transferFromFpga (&pint, objId, base, bytes, tag); };
 };
@@ -35,7 +36,8 @@ public:
     virtual void disconnect(void) {
         printf("DmaRequestWrapper.disconnect called %d\n", pint.client_fd_number);
     };
-    virtual void burstLen ( const uint16_t burstLenBytes ) = 0;
+    virtual void writeRequestSize ( const uint16_t burstLenBytes ) = 0;
+    virtual void readRequestSize ( const uint16_t readRequestBytes ) = 0;
     virtual void transferToFpga ( const uint32_t objId, const uint32_t base, const uint32_t bytes, const uint8_t tag ) = 0;
     virtual void transferFromFpga ( const uint32_t objId, const uint32_t base, const uint32_t bytes, const uint8_t tag ) = 0;
 };

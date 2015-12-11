@@ -41,7 +41,11 @@ interface DmaRequest;
    //
    // Configures burstLen used by DMA transfers. Only needed for performance tuning if default value does not perform well.
    //
-   method Action burstLen(Bit#(16) burstLenBytes);
+   method Action writeRequestSize(Bit#(16) burstLenBytes);
+   //
+   // Sets the DMA read request size. May be larger than writeRequestSize, depending on the host system chipset and configuration.
+   //
+   method Action readRequestSize(Bit#(16) readRequestSize);
    //
    // Requests a transferToFpga of system memory, streaming the data to the toFpga PipeOut
    // @param objId the reference to the memory object allocated by portalAlloc
@@ -104,7 +108,8 @@ module mkDmaController#(Vector#(numChannels,DmaIndication) indication)(DmaContro
    Vector#(numChannels, FIFO#(Tuple3#(Bit#(32),Bit#(32),Bit#(32)))) writeReqs <- replicateM(mkSizedFIFO(valueOf(NumOutstandingRequests)));
    Vector#(numChannels, FIFOF#(MemDataF#(DataBusWidth))) transferToFpgaFifo <- replicateM(mkFIFOF());
    Vector#(numChannels, FIFO#(Bit#(8))) writeTags <- replicateM(mkSizedFIFO(valueOf(NumOutstandingRequests)));
-   Reg#(Bit#(BurstLenSize)) burstLenReg <- mkReg(64);
+   Reg#(Bit#(BurstLenSize)) writeRequestSizeReg <- mkReg(64);
+   Reg#(Bit#(BurstLenSize)) readRequestSizeReg <- mkReg(256);
    Reg#(Bit#(32)) cyclesReg <- mkReg(0);
    rule countCycles;
       cyclesReg <= cyclesReg + 1;
@@ -169,13 +174,16 @@ module mkDmaController#(Vector#(numChannels,DmaIndication) indication)(DmaContro
 
    function DmaRequest dmaRequestInterface(Integer channel);
       return (interface DmaRequest;
-	 method Action burstLen(Bit#(16) burstLenBytes);
-	      burstLenReg <= truncate(burstLenBytes);
+	 method Action writeRequestSize(Bit#(16) burstLenBytes);
+	      writeRequestSizeReg <= truncate(burstLenBytes);
+	 endmethod
+	 method Action readRequestSize(Bit#(16) burstLenBytes);
+	      readRequestSizeReg <= truncate(burstLenBytes);
 	 endmethod
 	 method Action transferToFpga(Bit#(32) objId, Bit#(32) base, Bit#(32) bytes, Bit#(8) tag);
 	      readCmds[channel].enq(MemengineCmd {sglId: truncate(objId),
 						  base: extend(base),
-						  burstLen: extend(burstLenReg),
+						  burstLen: extend(readRequestSizeReg),
 						  len: bytes,
 						  tag: truncate(tag)
 						  });
@@ -183,7 +191,7 @@ module mkDmaController#(Vector#(numChannels,DmaIndication) indication)(DmaContro
 	 method Action transferFromFpga(Bit#(32) objId, Bit#(32) base, Bit#(32) bytes, Bit#(8) tag);
 	    writeCmds[channel].enq(MemengineCmd {sglId: truncate(objId),
 						 base: extend(base),
-						 burstLen: extend(burstLenReg),
+						 burstLen: extend(writeRequestSizeReg),
 						 len: bytes,
 						 tag: truncate(tag)
 						 });

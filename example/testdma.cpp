@@ -38,7 +38,8 @@ int doWrite = 1;
 int doRead = 1;
 int numchannels = 1;
 int numIters = 10;
-int burstLenBytes = 256;
+int writeReqBytes = 256;
+int readReqBytes = 256;
 
 class ChannelWorker : public DmaCallback {
     DmaChannel *channel;
@@ -70,14 +71,14 @@ public:
 	double dataBeats = (double)arraySize/16;
 	int headerBeats = 0;
 	if (inclHeaders) {
-	    headerBeats = arraySize / burstLenBytes;
+	    headerBeats = arraySize / writeReqBytes;
 	}
 	double totalBeats = dataBeats + headerBeats;
 	return totalBeats / (double)cycles;
     }
     void transferToFpgaDone ( uint32_t sglId, uint32_t base, const uint8_t tag, uint32_t cycles ) {
-	fprintf(stderr, "[%s:%d] sglId=%d base=%08x tag=%d burstLenBytes=%d cycles=%d transferToFpga bandwidth %5.2f MB/s link utilization %5.2f%%\n",
-		__FUNCTION__, __LINE__, sglId, base, tag, burstLenBytes, cycles, 16*250*linkUtilization(cycles), 100.0*linkUtilization(cycles, 1));
+	fprintf(stderr, "[%s:%d] sglId=%d base=%08x tag=%d readReqBytes=%d cycles=%d transferToFpga bandwidth %5.2f MB/s link utilization %5.2f%%\n",
+		__FUNCTION__, __LINE__, sglId, base, tag, readReqBytes, cycles, 16*250*linkUtilization(cycles), 100.0*linkUtilization(cycles, 1));
 	if (numReads) {
 	    fprintf(stderr, "[%s:%d] channel %d requesting dma transferToFpga size=%d\n", __FUNCTION__, __LINE__, channelNumber, arraySize);
 	    int tag = 0;
@@ -89,8 +90,8 @@ public:
 	}
     }
     void transferFromFpgaDone ( uint32_t sglId, uint32_t base, uint8_t tag, uint32_t cycles ) {
-	fprintf(stderr, "[%s:%d] sglId=%d base=%08x tag=%d burstLenBytes=%d cycles=%d transferFromFpga bandwidth %5.2f MB/s link utilization %5.2f%%\n",
-		__FUNCTION__, __LINE__, sglId, base, tag, burstLenBytes, cycles, 16*250*linkUtilization(cycles), 100.0*linkUtilization(cycles, 1));
+	fprintf(stderr, "[%s:%d] sglId=%d base=%08x tag=%d writeReqBytes=%d cycles=%d transferFromFpga bandwidth %5.2f MB/s link utilization %5.2f%%\n",
+		__FUNCTION__, __LINE__, sglId, base, tag, writeReqBytes, cycles, 16*250*linkUtilization(cycles), 100.0*linkUtilization(cycles, 1));
 	if (0)
 	for (int i = 0; i < 4; i++) {
 	  if (buffers[i]->reference() == sglId) {
@@ -124,7 +125,8 @@ void *ChannelWorker::threadfn(void *c)
 
 void ChannelWorker::run()
 {
-    channel->setBurstLen(burstLenBytes);
+    channel->setWriteRequestSize(writeReqBytes);
+    channel->setReadRequestSize(readReqBytes);
     for (int i = 0; i < 2; i++) {
 	if (i == 0) {
 	    numReads = numIters;
@@ -182,7 +184,7 @@ void ChannelWorker::runTest()
 int main(int argc, char * const*argv)
 {
     int opt;
-    while ((opt = getopt(argc, argv, "b:i:rws:")) != -1) {
+    while ((opt = getopt(argc, argv, "b:R:W:i:rws:")) != -1) {
 	switch (opt) {
 	case 'r':
 	    doWrite = 0;
@@ -191,9 +193,15 @@ int main(int argc, char * const*argv)
 	    doRead = 0;
 	    break;
 	case 'b':
-	    burstLenBytes = strtoul(optarg, 0, 0);
-	    if (burstLenBytes > 1024)
-	      burstLenBytes = 1024;
+	case 'W':
+	    writeReqBytes = strtoul(optarg, 0, 0);
+	    if (writeReqBytes > 1024)
+	      writeReqBytes = 1024;
+	    break;
+	case 'R':
+	    readReqBytes = strtoul(optarg, 0, 0);
+	    if (readReqBytes > 1024)
+	      readReqBytes = 1024;
 	    break;
 	case 'i':
 	    numIters = strtoul(optarg, 0, 0);

@@ -95,9 +95,9 @@ DmaChannel::DmaChannel(int channel, DmaCallback *callbacks, bool singleThreadedA
 	pthread_mutex_init(&channel_lock, 0);
     dmaRequest    = new DmaRequestProxy(proxyNames[channel], poller);
     dmaRequest->pint.busyType = BUSY_SPIN;
-    //dmaRequest->burstLen(burstLenBytes);
     dmaIndication = new DmaIndication(wrapperNames[channel], poller, this, callbacks);
-    dmaRequest->burstLen(128);
+    dmaRequest->writeRequestSize(128);
+    dmaRequest->readRequestSize(256);
 }
 
 void DmaChannel::checkIndications()
@@ -131,11 +131,20 @@ int DmaChannel::transferFromFpga ( const uint32_t objId, const uint32_t base, co
     return v;
 }
 
-int DmaChannel::setBurstLen(int bytes)
+int DmaChannel::setWriteRequestSize(int bytes)
 {
   if (!singleThreadedAccess) pthread_mutex_lock(&channel_lock);
-  this->burstLenBytes = std::min<int>(1024, bytes);
-  dmaRequest->burstLen(this->burstLenBytes);
+  this->writeRequestSize = std::min<int>(1024, bytes);
+  dmaRequest->writeRequestSize(this->writeRequestSize);
   if (!singleThreadedAccess) pthread_mutex_unlock(&channel_lock);
-  return this->burstLenBytes;
+  return this->writeRequestSize;
+}
+
+int DmaChannel::setReadRequestSize(int bytes)
+{
+  if (!singleThreadedAccess) pthread_mutex_lock(&channel_lock);
+  this->readRequestSize = std::min<int>(1024, bytes);
+  dmaRequest->readRequestSize(this->readRequestSize);
+  if (!singleThreadedAccess) pthread_mutex_unlock(&channel_lock);
+  return this->readRequestSize;
 }

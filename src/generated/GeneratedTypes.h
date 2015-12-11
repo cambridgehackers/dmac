@@ -232,15 +232,19 @@ int MMUIndicationJson_error ( struct PortalInternal *p, const uint32_t code, con
 int MMUIndicationJson_handleMessage(struct PortalInternal *p, unsigned int channel, int messageFd);
 extern MMUIndicationCb MMUIndicationJsonProxyReq;
 
-int DmaRequest_burstLen ( struct PortalInternal *p, const uint16_t burstLenBytes );
+int DmaRequest_writeRequestSize ( struct PortalInternal *p, const uint16_t burstLenBytes );
+int DmaRequest_readRequestSize ( struct PortalInternal *p, const uint16_t readRequestBytes );
 int DmaRequest_transferToFpga ( struct PortalInternal *p, const uint32_t objId, const uint32_t base, const uint32_t bytes, const uint8_t tag );
 int DmaRequest_transferFromFpga ( struct PortalInternal *p, const uint32_t objId, const uint32_t base, const uint32_t bytes, const uint8_t tag );
-enum { CHAN_NUM_DmaRequest_burstLen,CHAN_NUM_DmaRequest_transferToFpga,CHAN_NUM_DmaRequest_transferFromFpga};
-#define DmaRequest_reqinfo 0x30014
+enum { CHAN_NUM_DmaRequest_writeRequestSize,CHAN_NUM_DmaRequest_readRequestSize,CHAN_NUM_DmaRequest_transferToFpga,CHAN_NUM_DmaRequest_transferFromFpga};
+#define DmaRequest_reqinfo 0x40014
 
 typedef struct {
     uint16_t burstLenBytes;
-} DmaRequest_burstLenData;
+} DmaRequest_writeRequestSizeData;
+typedef struct {
+    uint16_t readRequestBytes;
+} DmaRequest_readRequestSizeData;
 typedef struct {
     uint32_t objId;
     uint32_t base;
@@ -254,20 +258,23 @@ typedef struct {
     uint8_t tag;
 } DmaRequest_transferFromFpgaData;
 typedef union {
-    DmaRequest_burstLenData burstLen;
+    DmaRequest_writeRequestSizeData writeRequestSize;
+    DmaRequest_readRequestSizeData readRequestSize;
     DmaRequest_transferToFpgaData transferToFpga;
     DmaRequest_transferFromFpgaData transferFromFpga;
 } DmaRequestData;
 int DmaRequest_handleMessage(struct PortalInternal *p, unsigned int channel, int messageFd);
 typedef struct {
     PORTAL_DISCONNECT disconnect;
-    int (*burstLen) (  struct PortalInternal *p, const uint16_t burstLenBytes );
+    int (*writeRequestSize) (  struct PortalInternal *p, const uint16_t burstLenBytes );
+    int (*readRequestSize) (  struct PortalInternal *p, const uint16_t readRequestBytes );
     int (*transferToFpga) (  struct PortalInternal *p, const uint32_t objId, const uint32_t base, const uint32_t bytes, const uint8_t tag );
     int (*transferFromFpga) (  struct PortalInternal *p, const uint32_t objId, const uint32_t base, const uint32_t bytes, const uint8_t tag );
 } DmaRequestCb;
 extern DmaRequestCb DmaRequestProxyReq;
 
-int DmaRequestJson_burstLen ( struct PortalInternal *p, const uint16_t burstLenBytes );
+int DmaRequestJson_writeRequestSize ( struct PortalInternal *p, const uint16_t burstLenBytes );
+int DmaRequestJson_readRequestSize ( struct PortalInternal *p, const uint16_t readRequestBytes );
 int DmaRequestJson_transferToFpga ( struct PortalInternal *p, const uint32_t objId, const uint32_t base, const uint32_t bytes, const uint8_t tag );
 int DmaRequestJson_transferFromFpga ( struct PortalInternal *p, const uint32_t objId, const uint32_t base, const uint32_t bytes, const uint8_t tag );
 int DmaRequestJson_handleMessage(struct PortalInternal *p, unsigned int channel, int messageFd);

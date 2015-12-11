@@ -128,8 +128,12 @@ int DmaRequestdisconnect_cb (struct PortalInternal *p) {
     (static_cast<DmaRequestWrapper *>(p->parent))->disconnect();
     return 0;
 };
-int DmaRequestburstLen_cb (  struct PortalInternal *p, const uint16_t burstLenBytes ) {
-    (static_cast<DmaRequestWrapper *>(p->parent))->burstLen ( burstLenBytes);
+int DmaRequestwriteRequestSize_cb (  struct PortalInternal *p, const uint16_t burstLenBytes ) {
+    (static_cast<DmaRequestWrapper *>(p->parent))->writeRequestSize ( burstLenBytes);
+    return 0;
+};
+int DmaRequestreadRequestSize_cb (  struct PortalInternal *p, const uint16_t readRequestBytes ) {
+    (static_cast<DmaRequestWrapper *>(p->parent))->readRequestSize ( readRequestBytes);
     return 0;
 };
 int DmaRequesttransferToFpga_cb (  struct PortalInternal *p, const uint32_t objId, const uint32_t base, const uint32_t bytes, const uint8_t tag ) {
@@ -142,7 +146,8 @@ int DmaRequesttransferFromFpga_cb (  struct PortalInternal *p, const uint32_t ob
 };
 DmaRequestCb DmaRequest_cbTable = {
     DmaRequestdisconnect_cb,
-    DmaRequestburstLen_cb,
+    DmaRequestwriteRequestSize_cb,
+    DmaRequestreadRequestSize_cb,
     DmaRequesttransferToFpga_cb,
     DmaRequesttransferFromFpga_cb,
 };
