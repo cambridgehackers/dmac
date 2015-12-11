@@ -75,21 +75,21 @@ public:
 	double totalBeats = dataBeats + headerBeats;
 	return totalBeats / (double)cycles;
     }
-    void readDone ( uint32_t sglId, uint32_t base, const uint8_t tag, uint32_t cycles ) {
-	fprintf(stderr, "[%s:%d] sglId=%d base=%08x tag=%d burstLenBytes=%d cycles=%d read bandwidth %5.2f MB/s link utilization %5.2f%%\n",
+    void transferToFpgaDone ( uint32_t sglId, uint32_t base, const uint8_t tag, uint32_t cycles ) {
+	fprintf(stderr, "[%s:%d] sglId=%d base=%08x tag=%d burstLenBytes=%d cycles=%d transferToFpga bandwidth %5.2f MB/s link utilization %5.2f%%\n",
 		__FUNCTION__, __LINE__, sglId, base, tag, burstLenBytes, cycles, 16*250*linkUtilization(cycles), 100.0*linkUtilization(cycles, 1));
 	if (numReads) {
-	    fprintf(stderr, "[%s:%d] channel %d requesting dma read size=%d\n", __FUNCTION__, __LINE__, channelNumber, arraySize);
+	    fprintf(stderr, "[%s:%d] channel %d requesting dma transferToFpga size=%d\n", __FUNCTION__, __LINE__, channelNumber, arraySize);
 	    int tag = 0;
-	    channel->read(buffers[0]->reference(), 0, arraySize, tag);
+	    channel->transferToFpga(buffers[0]->reference(), 0, arraySize, tag);
 	    numReads--;
 	} else {
 	    waitCount--;
 	    fprintf(stderr, "[%s:%d] channel %d waiting for %d responses\n", __FUNCTION__, __LINE__, channelNumber, waitCount);
 	}
     }
-    void writeDone ( uint32_t sglId, uint32_t base, uint8_t tag, uint32_t cycles ) {
-	fprintf(stderr, "[%s:%d] sglId=%d base=%08x tag=%d burstLenBytes=%d cycles=%d write bandwidth %5.2f MB/s link utilization %5.2f%%\n",
+    void transferFromFpgaDone ( uint32_t sglId, uint32_t base, uint8_t tag, uint32_t cycles ) {
+	fprintf(stderr, "[%s:%d] sglId=%d base=%08x tag=%d burstLenBytes=%d cycles=%d transferFromFpga bandwidth %5.2f MB/s link utilization %5.2f%%\n",
 		__FUNCTION__, __LINE__, sglId, base, tag, burstLenBytes, cycles, 16*250*linkUtilization(cycles), 100.0*linkUtilization(cycles, 1));
 	if (0)
 	for (int i = 0; i < 4; i++) {
@@ -100,9 +100,9 @@ public:
 	  }
 	}
 	if (numWrites) {
-	    fprintf(stderr, "[%s:%d] channel %d requesting dma write size=%d\n", __FUNCTION__, __LINE__, channelNumber, arraySize);
+	    fprintf(stderr, "[%s:%d] channel %d requesting dma transferFromFpga size=%d\n", __FUNCTION__, __LINE__, channelNumber, arraySize);
 	    int tag = 1;
-	    channel->write(buffers[1]->reference(), 0, arraySize, tag);
+	    channel->transferFromFpga(buffers[1]->reference(), 0, arraySize, tag);
 	    numWrites--;
 	} else {
 	    waitCount--;
@@ -136,15 +136,15 @@ void ChannelWorker::run()
 	if (numReads) {
 	    fprintf(stderr, "[%s:%d] channel %d requesting dma read size=%d\n", __FUNCTION__, __LINE__, channelNumber, arraySize);
 	    int tag = 0;
-	    channel->read(buffers[0]->reference(), 0, arraySize, tag);
+	    channel->transferToFpga(buffers[0]->reference(), 0, arraySize, tag);
 	    waitCount++;
 	    numReads--;
 	}
 
 	if (numWrites) {
-	    fprintf(stderr, "[%s:%d] channel %d requesting dma write size=%d\n", __FUNCTION__, __LINE__, channelNumber, arraySize);
+	    fprintf(stderr, "[%s:%d] channel %d requesting dma transferFromFpga size=%d\n", __FUNCTION__, __LINE__, channelNumber, arraySize);
 	    int tag = 1;
-	    channel->write(buffers[1]->reference(), 0, arraySize, tag);
+	    channel->transferFromFpga(buffers[1]->reference(), 0, arraySize, tag);
 	    waitCount++;
 	    numWrites--;
 	}

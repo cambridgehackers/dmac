@@ -77,13 +77,13 @@ public:
 	: DmaIndicationWrapper(id, poller), channel(channel), callbacks(callbacks) {
     }
 
-    void readDone ( uint32_t sglId, uint32_t base, const uint8_t tag, uint32_t cycles ) {
+    void transferToFpgaDone ( uint32_t sglId, uint32_t base, const uint8_t tag, uint32_t cycles ) {
 	if (callbacks)
-	    callbacks->readDone(sglId, base, tag, cycles);
+	    callbacks->transferToFpgaDone(sglId, base, tag, cycles);
     }
-    void writeDone ( uint32_t sglId, uint32_t base, uint8_t tag, uint32_t cycles ) {
+    void transferFromFpgaDone ( uint32_t sglId, uint32_t base, uint8_t tag, uint32_t cycles ) {
 	if (callbacks)
-	    callbacks->writeDone(sglId, base, tag, cycles);
+	    callbacks->transferFromFpgaDone(sglId, base, tag, cycles);
     }
 };
 
@@ -115,18 +115,18 @@ void DmaChannel::checkIndications()
     if (!singleThreadedAccess) pthread_mutex_unlock(&channel_lock);
 }
 
-int DmaChannel::read ( const uint32_t objId, const uint32_t base, const uint32_t bytes, const uint8_t tag )
+int DmaChannel::transferToFpga ( const uint32_t objId, const uint32_t base, const uint32_t bytes, const uint8_t tag )
 {
     if (!singleThreadedAccess) pthread_mutex_lock(&channel_lock);
-    int v = dmaRequest->read(objId, base, bytes, tag);
+    int v = dmaRequest->transferToFpga(objId, base, bytes, tag);
     if (!singleThreadedAccess) pthread_mutex_unlock(&channel_lock);
     return v;
 }
 
-int DmaChannel::write ( const uint32_t objId, const uint32_t base, const uint32_t bytes, const uint8_t tag )
+int DmaChannel::transferFromFpga ( const uint32_t objId, const uint32_t base, const uint32_t bytes, const uint8_t tag )
 {
     if (!singleThreadedAccess) pthread_mutex_lock(&channel_lock);
-    int v = dmaRequest->write(objId, base, bytes, tag);
+    int v = dmaRequest->transferFromFpga(objId, base, bytes, tag);
     if (!singleThreadedAccess) pthread_mutex_unlock(&channel_lock);
     return v;
 }

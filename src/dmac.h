@@ -29,15 +29,15 @@ public:
     void dereference();
 };
 
-// Implement DmaCallback to receive notifications that DMA read and write requests are done
+// Implement DmaCallback to receive notifications that DMA transferToFpga and transferFromFpga requests are done
 class DmaCallback {
 public:
     DmaCallback() {}
     virtual ~DmaCallback() {}
-    //  DmaChannel calls readDone from DmaChannel::checkIndications when it is notified that a DMA read request has completed
-    virtual void readDone ( uint32_t sglId, uint32_t base, const uint8_t tag, uint32_t cycles ) = 0;
-    //  DmaChannel calls writeDone from DmaChannel::checkIndications when it is notified that a DMA write request has completed
-    virtual void writeDone ( uint32_t sglId, uint32_t base, uint8_t tag, uint32_t cycles ) = 0;
+    //  DmaChannel calls transferToFpgaDone from DmaChannel::checkIndications when it is notified that a DMA transferToFpga request has completed
+    virtual void transferToFpgaDone ( uint32_t sglId, uint32_t base, const uint8_t tag, uint32_t cycles ) = 0;
+    //  DmaChannel calls transferFromFpgaDone from DmaChannel::checkIndications when it is notified that a DMA transferFromFpga request has completed
+    virtual void transferFromFpgaDone ( uint32_t sglId, uint32_t base, uint8_t tag, uint32_t cycles ) = 0;
 };
 
 class DmaIndication;
@@ -62,10 +62,10 @@ public:
     DmaChannel(int channelnum, DmaCallback *callbacks = 0, bool singleThreadedAccess = true);
     // check for notification of completion of DMA requests
     void checkIndications();
-    // issue a DMA read request
-    int read ( const uint32_t objId, const uint32_t base, const uint32_t bytes, const uint8_t tag );
-    // issue a DMA writerequest
-    int write ( const uint32_t objId, const uint32_t base, const uint32_t bytes, const uint8_t tag );
+    // issue a DMA transferToFpga request
+    int transferToFpga ( const uint32_t objId, const uint32_t base, const uint32_t bytes, const uint8_t tag );
+    // issue a DMA transferFromFpga request
+    int transferFromFpga ( const uint32_t objId, const uint32_t base, const uint32_t bytes, const uint8_t tag );
     // change burstLenBytes
     int setBurstLen(int burstLen);
 };
