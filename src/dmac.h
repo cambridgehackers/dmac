@@ -24,7 +24,7 @@ public:
     // returns the reference to the object
     //
     // Sends the address translation table to hardware MMU if necessary.
-    int reference();
+    uint32_t reference();
     // Removes the address translation table from the hardware MMU
     void dereference();
 };

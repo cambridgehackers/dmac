@@ -32,6 +32,7 @@ DmaManager *mgr;
 void initDmaManager()
 {
 #ifndef SIMULATION
+#warning
     noprogram = 1;
 #endif
     if (!mgr)
@@ -53,7 +54,7 @@ DmaBuffer::~DmaBuffer()
     close(fd);
 }
 
-int DmaBuffer::reference()
+uint32_t DmaBuffer::reference()
 {
     initDmaManager();
     if (ref == -1)
