@@ -45,7 +45,7 @@ interface DmaRequest;
    //
    // Sets the DMA read request size. May be larger than writeRequestSize, depending on the host system chipset and configuration.
    //
-   method Action readRequestSize(Bit#(16) readRequestSize);
+   method Action readRequestSize(Bit#(16) readRequestBytes);
    //
    // Requests a transferToFpga of system memory, streaming the data to the toFpga PipeOut
    // @param objId the reference to the memory object allocated by portalAlloc
