@@ -94,7 +94,7 @@ module mkDmaController#(Vector#(numChannels,DmaIndication) indication)(DmaContro
 	     Add#(b__, TLog#(numChannels), TAdd#(1, TLog#(TMul#(NumOutstandingRequests, numChannels)))),
 	     Add#(c__, TLog#(numChannels), MemTagSize), // from MemReadEngine
 	     Add#(d__, TLog#(numChannels), TLog#(TMul#(NumOutstandingRequests, numChannels))),
-	     FunnelPipesPipelined#(1, numChannels, MemTypes::MemData#(128), 2),
+	     FunnelPipesPipelined#(1, numChannels, MemTypes::MemData#(DataBusWidth), 2),
 	     FunnelPipesPipelined#(1, numChannels, MemTypes::MemRequest, 2),
 	     FunnelPipesPipelined#(1, numChannels, Bit#(6), 2)
 	     );
