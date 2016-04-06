@@ -128,10 +128,10 @@ void ChannelWorker::run()
     channel->setWriteRequestSize(writeReqBytes);
     channel->setReadRequestSize(readReqBytes);
     for (int i = 0; i < 2; i++) {
-	if (i == 0) {
+	if (i == 0 && doRead) {
 	    numReads = numIters;
 	    numWrites = 0;
-	} else {
+	} else if (doWrite) {
 	    numReads = 0;
 	    numWrites = numIters;
 	}
