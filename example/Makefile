@@ -8,6 +8,11 @@ BSCFLAGS_COMMON = $(BSV_FLAGS_DMAC) -D BOARD_$(BOARD)
 BSCFLAGS_COMMON += +RTS -K46777216 -RTS -show-schedule
 BSCPATHFLAGS=  -bdir $(DTOP)/obj-$(BOARD) -vdir $(DTOP)/verilog -simdir $(DTOP)/obj-$(BOARD) -info-dir $(DTOP)/obj-$(BOARD)
 BSCFLAGS_COMMON += $(BSCWARNFLAGS) $(BSCOPTFLAGS) $(BSCPATHFLAGS) --wait-for-license
+ifneq ($(BOARD),kc705g2)
+BSCFLAGS_COMMON += -D DataBusWidth=256 -D TRACE_PORTAL
+else
+BSCFLAGS_COMMON += -D DataBusWidth=128
+endif
 
 all: testdma-$(BOARD) bits
 
