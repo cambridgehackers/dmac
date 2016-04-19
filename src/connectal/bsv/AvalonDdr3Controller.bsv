@@ -20,27 +20,41 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+import Clocks          ::*;
+import GetPut          ::*;
+import ClientServer    ::*;
+import ConnectalClocks ::*;
+import ALTERA_DDR3_WRAPPER::*;
 `include "ConnectalProjectConfig.bsv"
 
-`ifndef DataBusWidth
-`define DataBusWidth 64
-`endif
+typedef 25 Ddr3AddrWidth;
+typedef 512 Ddr3DataWidth;
 
-typedef TDiv#(TMax#(128,DataBusWidth),8) TlpDataBytes;
-typedef TDiv#(TMax#(128,DataBusWidth),32) TlpDataWords;
+interface Ddr3Pins;
+   (* prefix="" *)
+   interface Ddr3 ddr3;
+   method Action osc_50(Bit#(1) b3d, Bit#(1) b4a, Bit#(1) b4d, Bit#(1) b7a, Bit#(1) b7d, Bit#(1) b8a, Bit#(1) b8d);
+endinterface
 
-typedef `PhysAddrWidth PhysAddrWidth;
-typedef `SlaveDataBusWidth SlaveDataBusWidth;
-typedef `DataBusWidth DataBusWidth;
-typedef `NumberOfMasters NumberOfMasters;
-typedef `SlaveControlAddrWidth SlaveControlAddrWidth;
-typedef `NumberOfUserTiles NumberOfUserTiles;
-typedef TAdd#(`NumberOfUserTiles,1) NumberOfTiles;
-typedef 2 NumReadClients;
-typedef 2 NumWriteClients;
-//typedef `PinType TileExtType;
-//typedef `PinType PinType;
-typedef 16 MaxNumberOfPortals;
-`ifdef PcieLanes
-typedef `PcieLanes PcieLanes;
-`endif
+interface Ddr3;
+   interface Avalonddr3Mem ddr3b;
+   (* prefix="" *)
+   interface Avalonddr3Oct rzq_4;
+   interface Clock sysclk_deleteme_unused_clock;
+   interface Reset sysrst_deleteme_unused_reset;
+endinterface
+
+(* synthesize *)
+module mkDdr3#(Clock clk50)(Ddr3);
+   let clock <- exposeCurrentClock();
+   let reset <- exposeCurrentReset();
+
+   Reset rst50 <- mkAsyncReset( 10, reset, clk50 );
+
+   AvalonDdr3 mc <- mkAvalonDdr3(clk50, reset, noReset);
+
+   interface ddr3b = mc.mem;
+   interface rzq_4 = mc.oct;
+   interface sysclk_deleteme_unused_clock = clock; //fixme
+   interface sysrst_deleteme_unused_reset = reset; //fixme
+endmodule

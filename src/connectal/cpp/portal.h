@@ -43,6 +43,7 @@ int pthread_create(pthread_t *thread, void *attr, void *(*start_routine) (void *
 #include <semaphore.h>
 #include <unistd.h>
 #include <pthread.h> // pthread_mutex_t
+#include <poll.h>
 #endif
 
 extern int simulator_dump_vcd;
@@ -315,13 +316,14 @@ extern PortalTransportFunctions transportBsim, // Transport for bsim
 class Portal;
 class PortalPoller {
 private:
-    Portal **portal_wrappers;
+    Portal *portal_wrappers[32];
+    struct pollfd portal_fds[32]; // 16 portals + pipefd[0] + extra
     pthread_mutex_t mutex;
-    struct pollfd *portal_fds;
     int pipefd[2];
     int startThread;
     int numWrappers;
     int numFds;
+    int inPoll;
 public:
     PortalPoller(int autostart=1);
     int registerInstance(Portal *portal);

@@ -88,7 +88,7 @@ void init_portal_internal(PortalInternal *pint, int id, int tile,
         // Use defaults for transport handling methods
 #ifdef BOARD_bluesim
         item = &transportBsim;
-#elif defined(BOARD_xsim) || defined(BOARD_verilator)
+#elif defined(BOARD_xsim) || defined(BOARD_verilator) || defined(BOARD_vsim)
         item = &transportXsim;
 #else
         item = &transportHardware;
@@ -181,11 +181,11 @@ char *getExecutionFilename(char *buf, int buflen)
 	rc = 0;
 	while(buf[rc]) {
 	    char *endptr;
-	    long addr = strtol(&buf[rc], &endptr, 16);
+	    unsigned long addr = strtoul(&buf[rc], &endptr, 16);
 	    if (endptr && *endptr == '-') {
 		char *endptr2;
-		long addr2 = strtol(endptr+1, &endptr2, 16);
-		if (addr <= (long)&initPortalHardware && (long)&initPortalHardware <= addr2) {
+		unsigned long addr2 = strtoul(endptr+1, &endptr2, 16);
+		if (addr <= (unsigned long)&initPortalHardware && (unsigned long)&initPortalHardware <= addr2) {
 		    filename = strstr(endptr2, "  ");
 		    while (*filename == ' ')
 			filename++;
@@ -232,8 +232,10 @@ static void initPortalHardwareOnce(void)
         int status;
         waitpid(pid, &status, 0);
 	fprintf(stderr, "subprocess pid %d completed status=%x %d\n", pid, status, WEXITSTATUS(status));
+#ifndef BOARD_de5
 	if (WEXITSTATUS(status) != 0)
 	    exit(-1);
+#endif
 	{
 	  int fd = -1;
 	  ssize_t len;
@@ -301,6 +303,16 @@ static void initPortalHardwareOnce(void)
         argv[ind++] = (char *)"-R";
         argv[ind++] = (char *)"work.xsimtop";
 #endif
+#if defined(BOARD_vsim)
+	const char *exetype = "vsim";
+	bindir = 0; // the simulation driver is found in $PATH
+        argv[ind++] = (char *)"-c";
+        argv[ind++] = (char *)"-sv_lib";
+        argv[ind++] = (char *)"./bin/xsimtop";
+        argv[ind++] = (char *)"work.xsimtop";
+        argv[ind++] = (char *)"-do";
+        argv[ind++] = (char *)"run -all; quit -f";
+#endif
 	if (bindir)
 	    sprintf(exename, "%s/%s", bindir, exetype);
 	else
@@ -338,7 +350,9 @@ if (trace_portal) fprintf(stderr, "[%s:%d] LD_LIBRARY_PATH %s *******\n", __FUNC
 	  const char *fpgajtag = "fpgajtag";
 #endif // !__arm__
 	  argv[ind++] = filename;
-	  execvp (fpgajtag, argv);
+          errno = 0;
+          if (filename) // only run fpgajtag if filename was found
+	      execvp (fpgajtag, argv);
 	  fprintf(stderr, "[%s:%d] exec(%s) failed errno=%d:%s\n", __FUNCTION__, __LINE__, fpgajtag, errno, strerror(errno));
         }
 #endif // !SIMULATION

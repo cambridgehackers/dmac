@@ -59,7 +59,7 @@ interface PcieEndpointX7#(numeric type lanes);
    interface PciewrapUser#(lanes)              user;
    interface PciewrapPipe#(lanes)              pipe;
    interface PciewrapCommon#(lanes)            common;
-   interface Server#(TLPData#(16), TLPData#(16)) tlpr;
+   interface Server#(TLPData#(TlpDataBytes), TLPData#(TlpDataBytes)) tlpr;
    interface Server#(TLPData#(16), TLPData#(16)) tlpc;
    interface Put#(Tuple2#(Bit#(64),Bit#(32)))  interruptRequest;
    interface PipeOut#(Bit#(64)) regChanges;
@@ -130,7 +130,49 @@ function TLPData#(16) convertCQDescriptorToTLP16(CQDescriptor desc, Bit#(32) dat
    return retval;
 endfunction
 
-function TLPData#(16) convertRCDescriptorToTLP16(RCDescriptor desc, Bit#(32) data);
+function Tuple4 #(RQDescriptor,
+		  TLPFirstDWBE,
+		  TLPLastDWBE,
+		  Maybe#(Bit#(32)))
+         convertTLP16ToRQDescriptor (TLPData #(TlpDataBytes) header);
+
+   // Note: other than .addr and .data, remaining fields are same for
+   // the two header formats below
+   TLPMemoryIO3DWHeader header3dw = unpack(truncate(header.data));
+   TLPMemory4DWHeader   header4dw = unpack(truncate(header.data));
+   RQDescriptor desc = unpack(0);
+   Maybe#(Bit#(32)) data = tagged Invalid;
+   
+   desc.relaxed      = header4dw.relaxed;
+   desc.nosnoop      = header4dw.nosnoop;
+   desc.tclass       = header4dw.tclass;
+   desc.reqiden      = False;
+   desc.tag          = header4dw.tag;
+   desc.reqid        = header4dw.reqid;
+   desc.poisoned     = header4dw.poison;
+   case(header4dw.format)
+      MEM_READ_3DW_NO_DATA: desc.reqtype = MEMORY_READ;
+      MEM_READ_4DW_NO_DATA: desc.reqtype = MEMORY_READ;
+      MEM_WRITE_3DW_DATA:   desc.reqtype = MEMORY_WRITE;
+      MEM_WRITE_4DW_DATA:   desc.reqtype = MEMORY_WRITE;
+      default:              desc.reqtype = MEMORY_READ;
+   endcase
+   desc.dwcount      = (header4dw.length == 0) ? 1024 : zeroExtend(header4dw.length);
+   
+   if (header4dw.format == MEM_WRITE_4DW_DATA || header4dw.format == MEM_READ_4DW_NO_DATA) begin
+      desc.address      = header4dw.addr;
+   end
+   else begin
+      desc.address      = zeroExtend(header3dw.addr);
+      if (header3dw.format == MEM_WRITE_3DW_DATA) begin
+	 data           = tagged Valid convertDW(header3dw.data);
+      end
+   end
+   
+   return tuple4 (desc, header4dw.firstbe, header4dw.lastbe, data);
+endfunction
+
+function TLPData#(TlpDataBytes) convertRCDescriptorToTLP16(RCDescriptor desc, Vector#(TSub#(TlpDataWords,3),Bit#(32)) data);
    TLPCompletionHeader header = defaultValue;
    header.tclass    = desc.tclass;
    header.relaxed   = desc.relaxed;
@@ -143,16 +185,17 @@ function TLPData#(16) convertRCDescriptorToTLP16(RCDescriptor desc, Bit#(32) dat
    header.length    = (desc.dwcount == 1024) ? 0 : truncate(desc.dwcount);
    header.bytecount = (desc.bytecount == 4096) ? 0 : truncate(desc.bytecount);
    header.loweraddr = truncate(desc.loweraddr);
-   header.data      = convertDW(data);
+   header.data      = data[0];
 
    Bool is3DW = (desc.dwcount == 0);
    Bool is3Or4DW = (desc.dwcount == 0) || (desc.dwcount == 1);
-   TLPData#(16) retval = defaultValue;
+   TLPData#(TlpDataBytes) retval = defaultValue;
    retval.sof   = True;
    retval.eof   = is3Or4DW;
    retval.hit   = 1; // XXX
-   retval.data  = pack(header);
-   retval.be    = (is3DW ? 16'hFFF0 : 16'hFFFF);
+   retval.data  = {pack(takeAt(1,data)), pack(header)};
+   let maxwords = fromInteger(valueOf(TSub#(TlpDataWords,3)));
+   retval.be    = maxBound << (4 * (maxwords - max(desc.dwcount, maxwords)));
    
    return retval;
 endfunction
@@ -221,15 +264,15 @@ module mkPcieEndpointX7(PcieEndpointX7#(PcieLanes));
 
    // FIFOS
    FIFOF#(AxiStCq) fAxiCq <- mkFIFOF(clocked_by pcie_ep.user_clk, reset_by user_reset_n);
-   FIFOF#(AxiStRc) fAxiRc <- mkSizedFIFOF(32, clocked_by pcie_ep.user_clk, reset_by user_reset_n);
+   FIFOF#(AxiStRc) fAxiRc <- mkCFFIFOF(clocked_by pcie_ep.user_clk, reset_by user_reset_n);
 
-   FIFOF#(AxiStRq) fAxiRq <- mkSizedFIFOF(32, clocked_by pcie_ep.user_clk, reset_by user_reset_n);
+   FIFOF#(AxiStRq) fAxiRq <- mkCFFIFOF(clocked_by pcie_ep.user_clk, reset_by user_reset_n);
    FIFOF#(AxiStCc) fAxiCc <- mkFIFOF(clocked_by pcie_ep.user_clk, reset_by user_reset_n);
 
    FIFOF#(TLPData#(16)) fcq <- mkFIFOF(clocked_by pcie_ep.user_clk, reset_by user_reset_n);
-   FIFOF#(TLPData#(16)) frc <- mkFIFOF(clocked_by pcie_ep.user_clk, reset_by user_reset_n);
+   FIFOF#(TLPData#(TlpDataBytes)) frc <- mkFIFOF(clocked_by pcie_ep.user_clk, reset_by user_reset_n);
    FIFOF#(TLPData#(16)) fcc <- mkFIFOF(clocked_by pcie_ep.user_clk, reset_by user_reset_n);
-   FIFOF#(TLPData#(16)) frq <- mkFIFOF(clocked_by pcie_ep.user_clk, reset_by user_reset_n);
+   FIFOF#(TLPData#(TlpDataBytes)) frq <- mkFIFOF(clocked_by pcie_ep.user_clk, reset_by user_reset_n);
 
    FIFOF#(Tuple2#(Bit#(64),Bit#(32))) intrFifo <- mkFIFOF(clocked_by pcie_ep.user_clk, reset_by user_reset_n);
 
@@ -237,14 +280,24 @@ module mkPcieEndpointX7(PcieEndpointX7#(PcieLanes));
    let probe_axi_rq_last <- mkProbe(clocked_by pcie_ep.user_clk, reset_by user_reset_n);
    let probe_axi_rq_keep <- mkProbe(clocked_by pcie_ep.user_clk, reset_by user_reset_n);
 
-   let probe_rq_data <- mkProbe(clocked_by pcie_ep.user_clk, reset_by user_reset_n);
-   let probe_rq_last <- mkProbe(clocked_by pcie_ep.user_clk, reset_by user_reset_n);
-   let probe_rq_keep <- mkProbe(clocked_by pcie_ep.user_clk, reset_by user_reset_n);
-
-   let probe_rc_data <- mkProbe(clocked_by pcie_ep.user_clk, reset_by user_reset_n);
+   let probe_rc_dwcount <- mkProbe(clocked_by pcie_ep.user_clk, reset_by user_reset_n);
+   let probe_rc_be <- mkProbe(clocked_by pcie_ep.user_clk, reset_by user_reset_n);
+   let probe_rc_upper_data <- mkProbe(clocked_by pcie_ep.user_clk, reset_by user_reset_n);
+   let probe_rc_lower_data <- mkProbe(clocked_by pcie_ep.user_clk, reset_by user_reset_n);
    let probe_rc_sop <- mkProbe(clocked_by pcie_ep.user_clk, reset_by user_reset_n);
    let probe_rc_eop <- mkProbe(clocked_by pcie_ep.user_clk, reset_by user_reset_n);
    let probe_rc_keep <- mkProbe(clocked_by pcie_ep.user_clk, reset_by user_reset_n);
+
+   let probe_tlp16_upper_data <- mkProbe(clocked_by pcie_ep.user_clk, reset_by user_reset_n);
+   let probe_tlp16_lower_data <- mkProbe(clocked_by pcie_ep.user_clk, reset_by user_reset_n);
+
+   let probe_rq_last <- mkProbe(clocked_by pcie_ep.user_clk, reset_by user_reset_n);
+   let probe_rq_address <- mkProbe(clocked_by pcie_ep.user_clk, reset_by user_reset_n);
+   let probe_rq_dwcount <- mkProbe(clocked_by pcie_ep.user_clk, reset_by user_reset_n);
+   let probe_rq_even <- mkProbe(clocked_by pcie_ep.user_clk, reset_by user_reset_n);
+   let probe_rq_upper_data <- mkProbe(clocked_by pcie_ep.user_clk, reset_by user_reset_n);
+   let probe_rq_lower_data <- mkProbe(clocked_by pcie_ep.user_clk, reset_by user_reset_n);
+   let probe_rq_keep <- mkProbe(clocked_by pcie_ep.user_clk, reset_by user_reset_n);
 
    // Drive s_axis_rq
    let rq_txready = (pcie_ep.s_axis_rq.tready != 0 && fAxiRq.notEmpty);
@@ -353,7 +406,8 @@ module mkPcieEndpointX7(PcieEndpointX7#(PcieLanes));
 			eop: unpack (pcie_ep.m_axis_rc.tlast),
 			keep:pcie_ep.m_axis_rc.tkeep,
 			be:  truncate (pcie_ep.m_axis_rc.tuser [31:0])};    // tuser.byte_en
-      probe_rc_data <= rc.data;
+      probe_rc_upper_data <= (rc.data >> 128)[127:0];
+      probe_rc_lower_data <= (rc.data >>   0)[127:0];
       probe_rc_sop <= rc.sop;
       probe_rc_eop <= rc.eop;
       probe_rc_keep <= rc.keep;
@@ -412,41 +466,46 @@ module mkPcieEndpointX7(PcieEndpointX7#(PcieLanes));
    rule rl_rc_header (fAxiRc.first.sop && rc_even);
       RCDescriptor rc_desc = unpack(fAxiRc.first.data [95:0]);
       // RC descriptor always 96 bytes with first data word in bits 127:96                                                                                            
-      Bit#(32) data = byteSwap(fAxiRc.first.data[127:96]);
-      TLPData#(16) tlp16 = convertRCDescriptorToTLP16(rc_desc, data);
-      rc_dwcount <= (rc_desc.dwcount == 0) ? 0 : rc_desc.dwcount - 1;
+      Vector#(TlpDataWords,Bit#(32)) datavec = unpack(fAxiRc.first.data);
+      TLPData#(TlpDataBytes) tlp16 = convertRCDescriptorToTLP16(rc_desc, takeAt(3,datavec));
+      let tlpDataWords = fromInteger(valueOf(TlpDataWords));
+      let wordsConsumed = min(rc_desc.dwcount, tlpDataWords-3);
+      let count = (rc_desc.dwcount == 0) ? 0 : rc_desc.dwcount - wordsConsumed;
+      rc_dwcount <= count;
+      probe_rc_dwcount <= count;
+      probe_tlp16_upper_data <= (tlp16.data >> 128)[127:0];
+      probe_tlp16_lower_data <= (tlp16.data >> 0)[127:0];
+      probe_rc_be <= tlp16.be;
       frc.enq(tlp16);
       let even = False;
-      if (rc_desc.dwcount == 0 || rc_desc.dwcount == 1) begin
+      if (rc_desc.dwcount <= tlpDataWords-3 || tlpDataWords > 4) begin
         fAxiRc.deq;
         even = True;
       end
       rc_even <= even;
    endrule
 
-   rule rl_rc_data ((!rc_even || !(fAxiRc.first.sop)) && (rc_dwcount != 0));
-      Bit#(16) be16;
-      case (rc_dwcount)
-         1: be16 = 16'hF000;
-         2: be16 = 16'hFF00;
-         3: be16 = 16'hFFF0;
-         default: be16 = 16'hFFFF;
-      endcase
-      let last = (rc_dwcount <= 4);
-      let dwcount = rc_dwcount - 4;
+   rule rl_rc_data ((!rc_even || !(fAxiRc.first.sop) || valueOf(TlpDataWords) > 4) && (rc_dwcount != 0));
+      let tlpDataWords = fromInteger(valueOf(TlpDataWords));
+      Bit#(TlpDataBytes) be16 = maxBound << (4*(tlpDataWords-min(tlpDataWords,rc_dwcount)));
+      let last = (rc_dwcount <= tlpDataWords);
+      let dwcount = rc_dwcount - tlpDataWords;
       if (last) dwcount = 0;
-      let data = (rc_even) ? fAxiRc.first.data[127:0]: fAxiRc.first.data[255:128];
-      TLPData#(16) tlp16 = TLPData{sof: False,
-                                   eof: last,
-                                   hit: 0,
-                                   be: be16,
-                                   data: pack(data)};
+      let data = (rc_even || tlpDataWords > 4) ? extend(fAxiRc.first.data) : extend(fAxiRc.first.data >> 128);
+      TLPData#(TlpDataBytes) tlp16 = TLPData{sof: False,
+					     eof: last,
+					     hit: 0,
+					     be: be16,
+					     data: data};
+      probe_tlp16_upper_data <= (tlp16.data >> 128)[127:0];
+      probe_tlp16_lower_data <= (tlp16.data >> 0)[127:0];
       frc.enq(tlp16);
-      if (last || !rc_even) begin
+      if (last || !rc_even || tlpDataWords > 4) begin
          fAxiRc.deq;
       end
       rc_dwcount <= dwcount;
-      rc_even <= (last) ? True : !rc_even;
+      probe_rc_dwcount <= dwcount;
+      rc_even <= (last) ? True : (!rc_even || valueOf(TlpDataWords) > 4);
    endrule
 
    Reg#(DWCount) cc_dwcount <- mkReg(0, clocked_by pcie_ep.user_clk, reset_by user_reset_n);
@@ -467,7 +526,7 @@ module mkPcieEndpointX7(PcieEndpointX7#(PcieLanes));
    endrule
 
    rule rl_cc_data((!fcc_tlps.first.sof) && (cc_dwcount != 0));
-      Bit#(256) x = zeroExtend(fcc_tlps.first.data); //FIXME
+      Bit#(256) x = zeroExtend(fcc_tlps.first.data); //FIXME multiword CPU read/write request
       fAxiCc.enq(AxiStCc {data: {x},
                        last: cc_dwcount <= 4,
                        keep: (cc_dwcount == 3) ? 8'h0F : 8'hFF});
@@ -475,15 +534,12 @@ module mkPcieEndpointX7(PcieEndpointX7#(PcieLanes));
    endrule
 
    // RQ.
-   FIFOF#(TLPData#(16)) frq_tlps <- mkFIFOF (clocked_by pcie_ep.user_clk, reset_by user_reset_n);
+   FIFOF#(TLPData#(TlpDataBytes)) frq_tlps <- mkFIFOF (clocked_by pcie_ep.user_clk, reset_by user_reset_n);
    Reg#(Bit#(4)) rq_first_be <- mkReg(0, clocked_by pcie_ep.user_clk, reset_by user_reset_n);
    Reg#(Bit#(4)) rq_last_be <- mkReg(0, clocked_by pcie_ep.user_clk, reset_by user_reset_n);
    Reg#(Bool)    rq_even    <- mkRegU(clocked_by pcie_ep.user_clk, reset_by user_reset_n);
    Reg#(DWCount) rq_dwcount <- mkReg(0, clocked_by pcie_ep.user_clk, reset_by user_reset_n);
    Reg#(AxiStRq) rq_rq <- mkRegU(clocked_by pcie_ep.user_clk, reset_by user_reset_n);
-
-   let probe_rq_dwcount <- mkProbe(clocked_by pcie_ep.user_clk, reset_by user_reset_n);
-   let probe_rq_even <- mkProbe(clocked_by pcie_ep.user_clk, reset_by user_reset_n);
 
    rule rl_rq_tlps;
       let tlp <- toGet(frq).get;
@@ -491,49 +547,56 @@ module mkPcieEndpointX7(PcieEndpointX7#(PcieLanes));
    endrule
 
    rule rl_rq_header if (frq_tlps.first.sof);
-      TLPData#(16) tlp <- toGet(frq_tlps).get();
+      TLPData#(TlpDataBytes) tlp <- toGet(frq_tlps).get();
       match { .rq_desc, .first_be, .last_be, .mdata} = convertTLP16ToRQDescriptor(tlp);
 
       let dwcount = ((rq_desc.reqtype == MEMORY_WRITE) ? rq_desc.dwcount : 0);
+      Bit#(4) keep = (1 << dwcount) - 1;
+      let last = (rq_desc.reqtype == MEMORY_WRITE) ? (dwcount <= 4) : True;
+      Bit#(128) upper_data = truncate(tlp.data >> 128);
+      let tlpDataWords = fromInteger(valueOf(TlpDataWords));
+      if (tlpDataWords > 4)
+	 dwcount = dwcount - min(tlpDataWords/2, dwcount);
+
+      let rq = AxiStRq {data: {upper_data, pack(rq_desc)},
+			last: last,
+			keep: {keep,4'hf},
+			first_be: first_be,
+			last_be: last_be};
+      if (rq_desc.reqtype == MEMORY_WRITE && tlpDataWords <= 4)
+	 rq_rq <= rq;
+      else
+	 fAxiRq.enq(rq);
       rq_dwcount <= dwcount;
       rq_even <= False;
       rq_first_be <= first_be;
       rq_last_be <= last_be;
-      let last = (rq_desc.reqtype == MEMORY_WRITE) ? (dwcount <= 4) : True;
-      let rq = AxiStRq {data: zeroExtend(pack(rq_desc)), //FIXME:
-			last: last,
-			keep: 8'h0F,
-			first_be: first_be,
-			last_be: last_be};
-      if (rq_desc.reqtype == MEMORY_WRITE)
-	 rq_rq <= rq;
-      else
-	 fAxiRq.enq(rq);
 
+      probe_rq_last <= last;
+      probe_rq_address <= rq_desc.address;
       probe_rq_dwcount <= dwcount;
+      probe_rq_upper_data <= upper_data;
+      probe_rq_lower_data <= pack(rq_desc);
+      probe_rq_keep <= rq.keep;
       probe_rq_even <= False;
    endrule
 
    // more data
    rule rl_rq_data if (rq_dwcount != 0);
-      TLPData#(16) tlp <- toGet(frq_tlps).get();
+      TLPData#(TlpDataBytes) tlp <- toGet(frq_tlps).get();
       let rq = rq_rq;
-      let last = (rq_dwcount <= 4);
-      let dwcount = rq_dwcount - 4;
+      let tlpDataWords = fromInteger(valueOf(TlpDataWords));
+      let last = (rq_dwcount <= tlpDataWords);
+      let dwcount = rq_dwcount - tlpDataWords;
       Bit#(8) keep;
       if (last)
 	dwcount = 0;
-      if (rq_even) begin
-	 rq.data[127:0] = tlp.data;
-	case (rq_dwcount)
-	   1: keep = 8'h01;
-	   2: keep = 8'h03;
-	   3: keep = 8'h07;
-	   default: keep = 8'h0f;
-	endcase
+      if (rq_even || tlpDataWords > 4) begin
+	 rq.data = extend(tlp.data);
+	 keep = (1 << rq_dwcount) - 1;
       end
       else begin
-	rq.data[255:128] = tlp.data;
+	rq.data = extend(tlp.data) << 128;
 	case (rq_dwcount)
 	   1: keep = 8'h1f;
 	   2: keep = 8'h3f;
@@ -548,9 +611,10 @@ module mkPcieEndpointX7(PcieEndpointX7#(PcieLanes));
 
       probe_rq_last <= last;
       probe_rq_keep <= keep;
-      probe_rq_data <= tlp.data;
+      probe_rq_upper_data <= truncate(tlp.data >> 128);
+      probe_rq_lower_data <= truncate(tlp.data >> 0);
 
-      if (!rq_even || last)
+      if (!rq_even || last || tlpDataWords > 4)
 	 fAxiRq.enq(rq);
       if (rq_even)
 	rq_rq <= rq;
@@ -600,7 +664,7 @@ module mkPcieEndpointX7(PcieEndpointX7#(PcieLanes));
    endmodule
 
 `ifndef FOO
-   Vector#(21,Tuple2#(Pcie3CfgType,Bit#(24))) changeValues = vec(
+   Vector#(20,Tuple2#(Pcie3CfgType,Bit#(24))) changeValues = vec(
       tuple2(Pcie3Cfg_rq_backpressure, extend(rqBackpressureCount)),
       tuple2(Pcie3Cfg_current_speed, extend(pcie_ep.cfg.current_speed)),
       tuple2(Pcie3Cfg_dpa_substate_change, extend(pcie_ep.cfg.dpa_substate_change)),
@@ -609,7 +673,7 @@ module mkPcieEndpointX7(PcieEndpointX7#(PcieLanes));
       tuple2(Pcie3Cfg_err_nonfatal_out, extend(pcie_ep.cfg.err_nonfatal_out)),
       tuple2(Pcie3Cfg_flr_in_process, extend(pcie_ep.cfg.flr_in_process)),
       tuple2(Pcie3Cfg_function_power_state, extend(pcie_ep.cfg.function_power_state)),
-      tuple2(Pcie3Cfg_function_status, extend(pcie_ep.cfg.function_status)),
+//      tuple2(Pcie3Cfg_function_status, extend(pcie_ep.cfg.function_status)),
       tuple2(Pcie3Cfg_hot_reset_out, extend(pcie_ep.cfg.hot_reset_out)),
       tuple2(Pcie3Cfg_link_power_state, extend(pcie_ep.cfg.link_power_state)),
       tuple2(Pcie3Cfg_ltr_enable, extend(pcie_ep.cfg.ltr_enable)),
@@ -625,7 +689,7 @@ module mkPcieEndpointX7(PcieEndpointX7#(PcieLanes));
       tuple2(Pcie3Cfg_rcb_status, extend(pcie_ep.cfg.rcb_status)));
    let change_pipes <- mapM(mkChangeSource, changeValues, clocked_by pcie_ep.user_clk, reset_by user_reset_n);
 
-   FunnelPipe#(1,21,RegChange,3) changePipe <- mkFunnelPipesPipelined(change_pipes, clocked_by pcie_ep.user_clk, reset_by user_reset_n);
+   FunnelPipe#(1,20,RegChange,3) changePipe <- mkFunnelPipesPipelined(change_pipes, clocked_by pcie_ep.user_clk, reset_by user_reset_n);
    FIFOF#(RegChange) changeFifo <- mkSizedBRAMFIFOF(128, clocked_by pcie_ep.user_clk, reset_by user_reset_n);
    mkConnection(changePipe[0], toPipeIn(changeFifo), clocked_by pcie_ep.user_clk, reset_by user_reset_n);
 `else
