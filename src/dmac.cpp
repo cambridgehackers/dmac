@@ -32,7 +32,6 @@ DmaManager *mgr;
 void initDmaManager()
 {
 #ifndef SIMULATION
-#warning
     noprogram = 1;
 #endif
     if (!mgr)
@@ -105,7 +104,7 @@ void DmaChannel::checkIndications()
 {
     if (!singleThreadedAccess) pthread_mutex_lock(&channel_lock);
     void *rc = poller->pollFn(
-#ifdef BOARD_bluesim
+#ifdef SIMULATION
 			      100
 #else
 -1
