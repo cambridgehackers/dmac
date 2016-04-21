@@ -6,3 +6,10 @@
 *.bit
 usage_statistics_webtalk.*
 *.o
+*.png
+obj-*
+libdmac-*.a
+vc709
+verilator
+kc705g2
+bluesim
