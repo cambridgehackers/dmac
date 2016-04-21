@@ -11,6 +11,7 @@ if [info exists env(DMAC_DIR)] {
 }
 
 set board $env(BOARD)
+puts "BOARD $board"
 if {$board == {vc709} || $board == {nfsume}} {
     set partname {xc7vx690tffg1761-2}
     set boardpart {xilinx.com:vc709:part0:1.6}
@@ -24,7 +25,7 @@ add_files verilog
 if {$board == {vc709} || $board == {nfsume}} {
     add_files -norecurse ./ip/$board/pcie3_7x_0/pcie3_7x_0.xci
 } else {
-    add_files -norecurse ./ip/$board/pcie_7x_0/pcie_7x_0.xci
+    add_files -norecurse ./ip/$board/pcie2_7x_0/pcie2_7x_0.xci
 }
 add_files -fileset constrs_1 -norecurse $DMAC_DIR/connectal/constraints/$board.xdc
 add_files -norecurse $DMAC_DIR/connectal/verilog/PositiveReset.v

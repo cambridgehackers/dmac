@@ -1,6 +1,6 @@
 
 DTOP=.
-BOARD=vc709
+BOARD?=vc709
 PREFIX?=/usr/local
 DMAC_DIR?=../src
 
@@ -17,7 +17,7 @@ endif
 all: testdma-$(BOARD) bits
 
 clean:
-	rm -fr *.so bsim testdma-bluesim testdma-vc709 obj verilog vc709 vivado.* *.o
+	rm -fr *.so bsim testdma-bluesim testdma-$(BOARD) obj verilog $(BOARD) vivado.* *.o
 
 ConnectalProjectConfig.bsv: 
 	if [ -f $(DMAC_DIR)/template/ConnectalProjectConfig.bsv ] ; then cp -v $(DMAC_DIR)/template/ConnectalProjectConfig.bsv .; fi
@@ -30,9 +30,9 @@ run: testdma-$(BOARD) mkExample.bit
 	LD_LIBRARY_PATH=$(PREFIX)/lib NOPROGRAM=1 ./testdma-$(BOARD)
 
 mkExample.bit: verilog/mkExample.v ipcore
-	rm -fr vc709
+	rm -fr $(BOARD)
 	DMAC_DIR=$(DMAC_DIR) vivado -mode batch -source impl.tcl
-	cp -v vc709/vc709.runs/impl_1/mkExample.bit mkExample.bit
+	cp -v $(BOARD)/$(BOARD).runs/impl_1/mkExample.bit mkExample.bit
 
 verilog/mkExample.v: Example.bsv ConnectalProjectConfig.bsv
 	mkdir -p obj-$(BOARD) verilog
