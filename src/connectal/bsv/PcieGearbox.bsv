@@ -15,8 +15,11 @@ import DefaultValue    :: *;
 import TieOff          :: *;
 import XilinxCells     :: *;
 import ClientServer    :: *;
-`ifdef XILINX
+`ifdef PCIE1
 import PCIEWRAPPER     :: *;
+`endif
+`ifdef PCIE2
+import PCIEWRAPPER2    :: *;
 `endif
 import Connectable     ::*;
 import Reserved        ::*;

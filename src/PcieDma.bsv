@@ -5,7 +5,11 @@ import MemTypes::*;
 import HostInterface::*;
 `ifndef BOARD_bluesim
 import PcieHost::*;
+`ifdef PCIE3
 import PCIEWRAPPER3::*;
+`else
+import PCIEWRAPPER2::*;
+`endif
 import PcieTop::*;
 typedef PciewrapPci_exp#(8) PciePins;
 `else
