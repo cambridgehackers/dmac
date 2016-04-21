@@ -34,8 +34,21 @@ if {$boardname == {vc709} || $boardname == {nfsume}} {
 } else {
     set partname {xc7k325tffg900-2}
     set boardpart {xilinx.com:kc705:part0:1.0}
-    set pcieversion 3.2
+    set PcieLanes 8
+    set maxlinkwidth "X$PcieLanes"
+    set maxinterfacebits [expr 16 * $PcieLanes]
+    set maxinterfacewidth "${maxinterfacebits}_bit"
+    set linkspeed {5.0_GT/s}
+    set maxinterfacewidth "128_bit"
+    set pcieversion 3.0
+    if {[version -short] >= "2015.1"} {
+	set pcieversion {3.1}
+    }
+    if {[version -short] >= "2015.3"} {
+	set pcieversion {3.2}
+    }
 }
+
 set ipdir "./ip"
 
 file mkdir $ipdir/$boardname
@@ -131,5 +144,9 @@ proc fpgamake_ipcore {core_name core_version ip_name params} {
 if {$boardname == {vc709}} {
     fpgamake_ipcore pcie3_7x $pcieversion pcie3_7x_0 [list CONFIG.PL_LINK_CAP_MAX_LINK_WIDTH {X8} CONFIG.PL_LINK_CAP_MAX_LINK_SPEED {8.0_GT/s} CONFIG.pf0_dev_cap_max_payload {1024_bytes} CONFIG.TL_PF_ENABLE_REG {false} CONFIG.vendor_id {1be7} CONFIG.PF0_DEVICE_ID {c100} CONFIG.PF0_SUBSYSTEM_VENDOR_ID {1be7} CONFIG.PF0_SUBSYSTEM_ID {a705} CONFIG.PF0_Use_Class_Code_Lookup_Assistant {false} CONFIG.pf0_base_class_menu {Memory_controller} CONFIG.pf0_bar0_64bit {true} CONFIG.pf0_bar0_size {16} CONFIG.pf0_bar2_enabled {true} CONFIG.pf0_bar2_64bit {true} CONFIG.pf0_bar2_scale {Megabytes} CONFIG.pf0_bar2_size {1} CONFIG.PF0_INTERRUPT_PIN {NONE} CONFIG.pf0_msi_enabled {false} CONFIG.pf0_msix_enabled {true} CONFIG.PF0_MSIX_CAP_TABLE_SIZE {010} CONFIG.PF0_MSIX_CAP_TABLE_OFFSET {00000200} CONFIG.PF0_MSIX_CAP_PBA_OFFSET {000001f0} CONFIG.axisten_if_width {256_bit} CONFIG.AXISTEN_IF_RC_STRADDLE {false} CONFIG.AXISTEN_IF_ENABLE_CLIENT_TAG {false} CONFIG.cfg_ctl_if {true} CONFIG.cfg_ext_if {false} CONFIG.cfg_fc_if {false} CONFIG.cfg_mgmt_if {false} CONFIG.cfg_status_if {true} CONFIG.cfg_tx_msg_if {false} CONFIG.en_ext_clk {false} CONFIG.axisten_freq {250} CONFIG.PF0_PM_CAP_SUPP_D1_STATE {false} CONFIG.pf0_dsn_enabled {true} CONFIG.mode_selection {Advanced} CONFIG.pcie_blk_locn {X0Y1} CONFIG.per_func_status_if {false} CONFIG.en_ext_clk {false} CONFIG.rcv_msg_if {false} CONFIG.tx_fc_if {false} CONFIG.shared_logic_in_core {true} CONFIG.en_msi_per_vec_masking {false} CONFIG.pipe_mode_sim {Enable_External_PIPE_Interface} CONFIG.pipe_sim {false} CONFIG.en_ext_pipe_interface {true}]
 } else {
-    fpgamake_ipcore pcie_7x $pcieversion pcie2_7x_0 [list CONFIG.mode_selection {Advanced} CONFIG.ASPM_Optionality {true} CONFIG.Disable_Tx_ASPM_L0s {true} CONFIG.Buf_Opt_BMA {true} CONFIG.Bar0_64bit {true} CONFIG.Bar0_Size {16} CONFIG.Bar0_Scale {Kilobytes} CONFIG.Bar2_64bit {true} CONFIG.Bar2_Enabled {true} CONFIG.Bar2_Scale {Megabytes} CONFIG.Bar2_Size {1} CONFIG.Base_Class_Menu {Memory_controller} CONFIG.Device_ID {c100} CONFIG.IntX_Generation {false} CONFIG.MSI_Enabled {false} CONFIG.MSIx_Enabled {true} CONFIG.MSIx_PBA_Offset {1f0} CONFIG.MSIx_Table_Offset {200} CONFIG.MSIx_Table_Size {10} CONFIG.Maximum_Link_Width X8 CONFIG.Subsystem_ID {a705} CONFIG.Subsystem_Vendor_ID {1be7} CONFIG.Use_Class_Code_Lookup_Assistant {false} CONFIG.Vendor_ID {1be7} ]
+
+    fpgamake_ipcore  pcie_7x $pcieversion pcie2_7x_0 [list CONFIG.mode_selection {Advanced} CONFIG.ASPM_Optionality {true} CONFIG.Disable_Tx_ASPM_L0s {true} CONFIG.Buf_Opt_BMA {true} CONFIG.Bar0_64bit {true} CONFIG.Bar0_Size {16} CONFIG.Bar0_Scale {Kilobytes} CONFIG.Bar2_64bit {true} CONFIG.Bar2_Enabled {true} CONFIG.Bar2_Scale {Megabytes} CONFIG.Bar2_Size {1} CONFIG.Base_Class_Menu {Memory_controller} CONFIG.Device_ID {c100} CONFIG.IntX_Generation {false} CONFIG.MSI_Enabled {false} CONFIG.MSIx_Enabled {true} CONFIG.MSIx_PBA_Offset {1f0} CONFIG.MSIx_Table_Offset {200} CONFIG.MSIx_Table_Size {10} CONFIG.Maximum_Link_Width $maxlinkwidth CONFIG.Subsystem_ID {a705} CONFIG.Subsystem_Vendor_ID {1be7} CONFIG.Use_Class_Code_Lookup_Assistant {false} CONFIG.Vendor_ID {1be7} CONFIG.Link_Speed $linkspeed CONFIG.Interface_Width $maxinterfacewidth CONFIG.en_ext_clk {false} CONFIG.PCIe_Debug_Ports {false} CONFIG.shared_logic_in_core {true} \
+CONFIG.VC_Cap_Enabled {true} \
+    CONFIG.AER_Enabled {true} CONFIG.AER_Multiheader {true} CONFIG.AER_Permit_Root_Error_Update {true} CONFIG.AER_Completion_Timeout {true} CONFIG.AER_Uncorrectable_Internal_Error {true} CONFIG.AER_MC_Blocked_TLP {true} CONFIG.AER_Receiver_Overflow {true} CONFIG.AER_TLP_Prefix_Blocked {true}  CONFIG.Optional_Error_Support {059400} \
+   CONFIG.D0_PME_Support {false} CONFIG.D1_PME_Support {false} CONFIG.D2_PME_Support {false} CONFIG.D3hot_PME_Support {false} ]
 }
