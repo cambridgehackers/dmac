@@ -84,8 +84,8 @@ interface DmaController#(numeric type numChannels);
    interface Vector#(1,MemWriteClient#(DataBusWidth))     writeClient;
 endinterface
 
-typedef 15 NumOutstandingRequests;
-typedef TMul#(NumOutstandingRequests,TMul#(32,4)) BufferSizeBytes;
+typedef 31 NumOutstandingRequests;
+typedef TMul#(NumOutstandingRequests,1024) BufferSizeBytes;
 
 function Bit#(dsz) memdatafToData(MemDataF#(dsz) mdf); return mdf.data; endfunction
 
@@ -116,9 +116,7 @@ module mkDmaController#(Vector#(numChannels,DmaIndication) indication)(DmaContro
    endrule
 
    Vector#(numChannels, Probe#(Bit#(MemTagSize))) probe_readReq <- replicateM(mkProbe);
-   Vector#(numChannels, Probe#(Bool)) probe_readLast <- replicateM(mkProbe);
    Vector#(numChannels, Probe#(Bit#(8))) probe_readDone <- replicateM(mkProbe);
-   Vector#(numChannels, Probe#(Bit#(32))) probe_readCount <- replicateM(mkProbe);
 
    for (Integer channel = 0; channel < valueOf(numChannels); channel = channel + 1) begin
       FIFO#(Bit#(8)) readTags <- mkSizedFIFO(valueOf(NumOutstandingRequests));
@@ -132,13 +130,11 @@ module mkDmaController#(Vector#(numChannels,DmaIndication) indication)(DmaContro
       endrule
        rule readDataRule;
 	  let mdf <- toGet(re.readServers[channel].data).get();
-	  probe_readLast[channel] <= mdf.last;
 	  Bit#(32) count = readCount + 1;
 	  if (mdf.last) begin
 	     readTags.enq(extend(mdf.tag));
 	     count = 0;
 	  end
-	  probe_readCount[channel] <= count;
 	  readCount <= count;
 	  transferToFpgaFifo[channel].enq(mdf);
        endrule
