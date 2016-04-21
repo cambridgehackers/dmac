@@ -21,7 +21,7 @@ Installation Instructions
 -------------------------
 
  * Install Bluespec 2014.07.A or newer
- * Install Vivado 2014.4 or 2015.2
+ * Install Vivado 2014.4, 2015.2, or 2015.4
 
 If you previously installed connectal::
 
