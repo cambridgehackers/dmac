@@ -12,6 +12,7 @@ Contents:
    :maxdepth: 2
 
    dmacontroller.rst
+   building.rst
    example.rst
    pciedma.rst
    dmaclasses.rst
