@@ -8,7 +8,22 @@ BSCFLAGS_COMMON = $(BSV_FLAGS_DMAC) -D BOARD_$(BOARD)
 BSCFLAGS_COMMON += +RTS -K46777216 -RTS -show-schedule
 BSCPATHFLAGS=  -bdir $(DTOP)/obj-$(BOARD) -vdir $(DTOP)/verilog -simdir $(DTOP)/obj-$(BOARD) -info-dir $(DTOP)/obj-$(BOARD)
 BSCFLAGS_COMMON += $(BSCWARNFLAGS) $(BSCOPTFLAGS) $(BSCPATHFLAGS) --wait-for-license
-ifneq ($(BOARD),kc705g2)
+ifeq ($(BOARD),kc705)
+PCIE2=1
+endif
+ifeq ($(BOARD),kc705g2)
+PCIE2=1
+endif
+ifeq ($(BOARD),vc707)
+PCIE2=1
+endif
+ifeq ($(BOARD),vc707g2)
+PCIE2=1
+endif
+ifeq ($(BOARD),vc709)
+PCIE3=1
+endif
+ifeq ($(PCIE3),1)
 BSCFLAGS_COMMON += -D DataBusWidth=256 -D TRACE_PORTAL
 else
 BSCFLAGS_COMMON += -D DataBusWidth=128
@@ -58,6 +73,11 @@ endif
 testdma.o: testdma.cpp
 	g++ -O -g -I../src -c testdma.cpp
 
+
+.PHONY: $(DMAC_DIR)/libdmac-$(BOARD).a
+
+$(DMAC_DIR)/libdmac-$(BOARD).a:
+	make -C ../src BOARD=$BOARD libdmac-$(BOARD).a
 
 testdma-$(BOARD): testdma.o $(DMAC_DIR)/libdmac-$(BOARD).a
 	g++ -O -g -o testdma-$(BOARD) testdma.o -L$(DMAC_DIR) -ldmac-$(BOARD) -lpthread
