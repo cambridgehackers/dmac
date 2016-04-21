@@ -7,7 +7,7 @@ MEM_WRITE_INTERFACES = lDmaTest.writeClient
 BSVFILES = DmaController.bsv
 CPPFILES=  ../example/testdma.cpp dmac.cpp
 
-CONNECTALFLAGS += -I . -D NumChannels=8
+CONNECTALFLAGS += -I . -D NumChannels=1 -D DataBusWidth=256 -D TRACE_PORTAL -D BurstLenSize=11
 
 build.%:
 	grep generate $(CONNECTALDIR)/Makefile.connectal
