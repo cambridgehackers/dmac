@@ -4,7 +4,6 @@ CONNECTALDIR?=connectal
 
 all: bsvtops
 	$(MAKE) BOARD=vc709 libdmac-vc709.a
-	$(MAKE) BOARD=kc705g2 libdmac-kc705g2.a
 	$(MAKE) BOARD=bluesim libdmac-bluesim.a
 
 install: all
