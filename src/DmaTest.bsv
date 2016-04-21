@@ -45,7 +45,7 @@ module mkDmaTest#(DmaIndication dmaIndication0,
 							   dmaIndication5,
 							   dmaIndication6,
 							   dmaIndication7);
-   DmaController#(NumChannels) dmaController <- mkDmaController(dmaIndications);
+   DmaController#(NumChannels) dmaController <- mkDmaController(take(dmaIndications));
 
    for (Integer channel = 0; channel < valueOf(NumChannels); channel = channel + 1) begin
       Reg#(Bit#(16)) iter <- mkReg(0);
@@ -69,6 +69,7 @@ module mkDmaTest#(DmaIndication dmaIndication0,
    interface readClient  = dmaController.readClient;
    interface writeClient = dmaController.writeClient;
    interface request0 = dmaController.request[0];
+`ifdef FOO
    interface request1 = dmaController.request[1];
    interface request2 = dmaController.request[2];
    interface request3 = dmaController.request[3];
@@ -76,4 +77,5 @@ module mkDmaTest#(DmaIndication dmaIndication0,
    interface request5 = dmaController.request[5];
    interface request6 = dmaController.request[6];
    interface request7 = dmaController.request[7];
+`endif
 endmodule
